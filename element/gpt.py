@@ -2,6 +2,7 @@ import asyncio
 from openai import AsyncOpenAI
 import os
 import textwrap
+import TOKEN
 
 class gpt():
   async def join_arguments_by_length_limit(self, args, limit):
@@ -47,7 +48,7 @@ class gpt():
 
 
   async def gpt(self, message_gpt, size):
-    self.api_key = os.getenv("OPENAI_API_KEY")
+    self.api_key = TOKEN.OPENAI_API_KEY
     self.client = AsyncOpenAI(api_key=self.api_key)
     response_gpt = await self.client.chat.completions.create(
       model="gpt-3.5-turbo",
