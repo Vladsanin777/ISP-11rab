@@ -28,7 +28,7 @@ class TG_Users():
         )
       db_tg_users.commit()
 
-  async def tg_users_new_name(self, from_user):
+  async def tg_users_name(self, *, from_user):
     try:
       name = f"{from_user.first_name} {from_user.last_name}"
     except AttributeError:
@@ -38,17 +38,11 @@ class TG_Users():
         name = from_user.username
     return name
 
-  async def tg_users_proba_id(self, from_user):
+  async def tg_users_proba_name(self, *, id_tg):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
-      name = cursor.execute("SELECT name FROM tg_users WHERE id = ?", (int(from_user.id),)).fetchone()
-      id = cursor.execute("SELECT id FROM tg_users WHERE id = ?", (int(from_user.id),)).fetchone()
-      #Ивент добавления нового пользователя в базу данных
-      if id is None: 
-        cursor.execute("INSERT INTO tg_users (id, proba_premium_test_python, pofil_name, user_name, premium_gpt, premium_test_python) VALUES (?, ?, ?, ?, ?, ?)", (from_user.id, 3, l := ((await asyncio.gather(self.tg_users_new_name(from_user)))[0]), from_user.username, False, False,))
-        db_tg_users.commit()
-
-      return None if (n := name) is None else n
+      name = cursor.execute("SELECT name FROM tg_users WHERE id = ?", (id_tg,)).fetchone()
+      return name
 
 
 
@@ -59,7 +53,19 @@ class TG_Users():
       db_tg_users.commit()
       ic("Имя исправлено")
 
-  async def tg_user_name_f_l(self, from_user): return ((await asyncio.gather(self.tg_users_new_name(from_user)))[0]) if (a := ((await asyncio.gather(self.tg_users_proba_id(from_user)))[0])) is None else a[0]
+
+      
+
+  async def tg_user_poverka_new_user(self, *, id_tg):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
+      cursor = db_tg_users.cursor()
+      return cursor.execute("SELECT id FROM tg_users WHERE id = ?", (id_tg,)).fetchone()
+    
+
+
+
+  
+  
   async def tg_users_probanay_premium_test_python(self, *, from_user):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()

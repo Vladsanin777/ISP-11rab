@@ -41,13 +41,16 @@ from icecream import ic
 
 from cryptography.fernet import Fernet
 
+import TOKEN
+
+
 
 # Инициализируем бота Discord
 intents = disnake.Intents.default()
 bot = commands.Bot(command_prefix='!')
 
 # Инициализируем бота Telegram
-bot_token = os.getenv('BOT_TOKEN')
+bot_token = TOKEN.TG_token
 bot_t = aiogram.Bot(token=bot_token, parse_mode=aiogram.enums.ParseMode.HTML)
 dp = aiogram.Dispatcher(bot=bot_t)
 
@@ -92,10 +95,13 @@ async def on_ready():
 @dp.message(CommandStart())
 async def command_start_handler(message: aiogram.types.Message) -> None:
   await message.delete()
-  await (TG_Users().tg_users_edit_all_newuser(id = message.from_user.id, pofil_name = (await TG_Users().tg_users_new_name(message.from_user)), user_name = message.from_user.username, name = (await TG_Users().tg_users_new_name(from_user = message.from_user))))
+  ic((await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id))[0])
+  if (await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id))[0][0] is None:
+    await TG_Users().tg_users_edit_all_newuser(id = message.from_user.id, pofil_name = (await TG_Users().tg_users_new_name(message.from_user)), user_name = message.from_user.username, name = (name := (await TG_Users().tg_users_new_name(from_user = message.from_user))[0][0]))
+  else:
+    name = await TG_Users().tg_users_name(from_user = message.from_user)[0][0][0] if (n := await TG_Users().tg_users_proba_name(id_tg = message.from_user.id))[0][0][0] is None else n
   button1 = InlineKeyboardButton(text="Закрыть", callback_data='esc')
   catalog_list = InlineKeyboardMarkup(inline_keyboard=[[button1]])
-  name = (await (asyncio.gather(TG_Users().tg_user_name_f_l(message.from_user))))[0]
   await message.answer(f'Привет, {name}\nУ меня есть следующие комманды:\n/start - для получения информации о боте\n/gpt - для взоимодействия с ChatGPT 3.5\n/new - для отправки новости всей группе\n/promo - для получения возможностей\n/help - для обращения в техподдержку бота\n/info - полный список команд\n/name - изменить обращение к вам\n/python_test', reply_markup = catalog_list)
 
 @dp.message(Command(commands = ["name"]))
@@ -114,10 +120,10 @@ async def edit_name(message: aiogram.types.Message):
     await message.answer(f"Теперь я буду обращеться к тебе {new_name}", reply_markup = catalog_list)
   elif new_name is None:
     await asyncio.gather(TG_Users().tg_users_edit_name(from_user = message.from_user, new_name = None))
-    await message.answer(f'Теперь я буду обращеться к тебе по профилю, а не {name}', reply_markup = catalog_list)
+    await message.answer(f'Теперь я буду обращеться к тебе по профилю, а не {name[0]}', reply_markup = catalog_list)
   else:
     await asyncio.gather(TG_Users().tg_users_edit_name(from_user = message.from_user, new_name = new_name))
-    await message.answer(f'Старое имя {name}\nНовое имя {new_name}', reply_markup = catalog_list)
+    await message.answer(f'Старое имя {name[0]}\nНовое имя {new_name}', reply_markup = catalog_list)
 
 
 
@@ -477,7 +483,7 @@ async def ln_command(message: aiogram.types.Message) -> None:
 
 #Создаём цикл событий
 loop = asyncio.get_event_loop()
-asyncio.ensure_future(bot.start(os.getenv('TOKEN')))
-asyncio.ensure_future(dp.start_polling(aiogram.Bot(str(os.getenv("BOT_TOKEN")), parse_mode=aiogram.enums.ParseMode.HTML)))
+asyncio.ensure_future(bot.start(TOKEN.DS_token))
+asyncio.ensure_future(dp.start_polling(aiogram.Bot(str(TOKEN.TG_token), parse_mode=aiogram.enums.ParseMode.HTML)))
 ORM()
 loop.run_forever()
