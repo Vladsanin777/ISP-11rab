@@ -58,20 +58,19 @@ class Code():
         return Fernet(key).decrypt(value).decode()  # Decode result back to text
 
   
-async def main():
-    while True:
-        run = input("Введите действие: ")
-        match run:
-            case "-en":
-                value_to_encrypt = input("Текст который надо зашивровать: ")
-                value, key = await Code().encode_1(value=value_to_encrypt)
-                print(f"Зашифрованный текст: {value}\nКлюч: {key.decode()}")  # Decode key for display
-            case "-de":
-                value_to_decrypt = input("Текст который надо расзашивровать: ")
-                key = input("Введите ключь для расшифровки: ").encode()  # Encode key before decryption
-                print(await Code().decode_1(value=value_to_decrypt, key=key))
-            case _:
-                print("Такого действия нет")
+async def main_2():
+    run = input("Введите действие: ")
+    match run:
+        case "-en":
+            value_to_encrypt = input("Текст который надо зашивровать: ")
+            value, key = await Code().encode_1(value=value_to_encrypt)
+            print(f"Зашифрованный текст: {value}\nКлюч: {key.decode()}")  # Decode key for display
+        case "-de":
+            value_to_decrypt = input("Текст который надо расзашивровать: ")
+            key = input("Введите ключь для расшифровки: ").encode()  # Encode key before decryption
+            print(await Code().decode_1(value=value_to_decrypt, key=key))
+        case _:
+            print("Такого действия нет")
 
 
 
@@ -513,18 +512,23 @@ async def ln_command(message: aiogram.types.Message) -> None:
 
 
 
-async def main():
+async def main_1(*, ds, tg):
+    print("hj")
     # Создать цикл событий
-    loop = asyncio.new_event_loop()
-
-    # Инициализировать ботов (предполагая асинхронную инициализацию)
-    
-    asyncio.ensure_future(bot.start(await asyncio.gather(Code().decode_1(value = TOKEN.DS_token[0], key = TOKEN.DS_token[1]))))
-    asyncio.ensure_future(dp.start_polling(aiogram.Bot(await asyncio.gather(Code().decode_1(value = TOKEN.TG_token[0], key = TOKEN.TG_token[1])), parse_mode=aiogram.enums.ParseMode.HTML)))
-    asyncio.ensure_future(main())
     ORM()
+    loop = asyncio.get_event_loop()
+    # Инициализировать ботов (предполагая асинхронную инициализацию)
+    asyncio.ensure_future(bot.start(ds))
+    asyncio.ensure_future(dp.start_polling(aiogram.Bot(token=tg)))
 
     # Запустить цикл событий
-    loop.run_until_complete(main())
+    loop.run_forever()
 
-asyncio.run(main())
+async def main_3():
+    await asyncio.gather(main_1(
+        ds = (await asyncio.gather(Code().decode_1(value = TOKEN.DS_token[0], key = TOKEN.DS_token[1])))[0],
+        tg = (await asyncio.gather(Code().decode_1(value = TOKEN.TG_token[0], key = TOKEN.TG_token[1])))[0]
+    ))
+
+
+asyncio.run(main_3())
