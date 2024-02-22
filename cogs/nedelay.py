@@ -25,25 +25,28 @@ class Nedelay (commands.Cog):
 
   async def nedelay_commands(self):
     result = (await asyncio.gather( element.chetnost_nedeli.ChetnostNedeli().is_even_week()))[0]
-    for id_channel in [1181006630721179691, 1180156712150376488]:
-      match id_channel:
-        case 1181006630721179691:
-          if result[0] and not(result[1]): picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание числитель.png", spoiler=False, description="Эта неделя числитель!")
-          elif result[0] and result[1]: picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание знаменатель.png", spoiler=False, description="Следующая неделя знаменатель!")
-          elif not(result[0]) and result[1]: picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание числитель.png", spoiler=False, description="Следующая неделя числитель!")
-          elif not(result[0]) and not(result[1]): picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание знаменатель.png", spoiler=False, description="Эта неделя знаменатель!")
-          else: picture = None
-        case 1180156712150376488:
-          if result[0] and not(result[1]): picture = disnake.File(fp="raspisanie/chetnost_nedelay/Числитель.png", spoiler=False, description="Эта неделя числитель!")
-          elif result[0] and result[1]: picture = disnake.File(fp="raspisanie/chetnost_nedelay/Знаменатель.png", spoiler=False, description="Следующая неделя знаменатель!")
-          elif not(result[0]) and result[1]: picture = disnake.File(fp="raspisanie/chetnost_nedelay/Числитель.png", spoiler=False, description="Следующая неделя числитель!")
-          elif not(result[0]) and not(result[1]): picture = disnake.File(fp="raspisanie/chetnost_nedelay/Знаменатель.png", spoiler=False, description="Эта неделя знаменатель!")
-          else: picture = None
 
-      channel = self.bot.get_channel(id_channel)
-      messages = await channel.history().flatten()
-      await channel.delete_messages(messages)
-      await channel.send(content="", file=picture)
+    for id_channel in [1181006630721179691, 1180156712150376488]:
+      last_message = self.bot.get_channel(id_channel).fetch_message(1)
+      if datetime.utcnow() - last_message.created_at < timedelta(hours=1) or last_message.author.id != 1151110889492185118:
+        match id_channel:
+          case 1181006630721179691:
+            if result[0] and not(result[1]): picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание числитель.png", spoiler=False, description="Эта неделя числитель!")
+            elif result[0] and result[1]: picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание знаменатель.png", spoiler=False, description="Следующая неделя знаменатель!")
+            elif not(result[0]) and result[1]: picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание числитель.png", spoiler=False, description="Следующая неделя числитель!")
+            elif not(result[0]) and not(result[1]): picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание знаменатель.png", spoiler=False, description="Эта неделя знаменатель!")
+            else: picture = None
+          case 1180156712150376488:
+            if result[0] and not(result[1]): picture = disnake.File(fp="raspisanie/chetnost_nedelay/Числитель.png", spoiler=False, description="Эта неделя числитель!")
+            elif result[0] and result[1]: picture = disnake.File(fp="raspisanie/chetnost_nedelay/Знаменатель.png", spoiler=False, description="Следующая неделя знаменатель!")
+            elif not(result[0]) and result[1]: picture = disnake.File(fp="raspisanie/chetnost_nedelay/Числитель.png", spoiler=False, description="Следующая неделя числитель!")
+            elif not(result[0]) and not(result[1]): picture = disnake.File(fp="raspisanie/chetnost_nedelay/Знаменатель.png", spoiler=False, description="Эта неделя знаменатель!")
+            else: picture = None
+
+        channel = self.bot.get_channel(id_channel)
+        messages = await channel.history().flatten()
+        await channel.delete_messages(messages)
+        await channel.send(content="", file=picture)
 
   async def nedelay_loop(self):
     while True:
