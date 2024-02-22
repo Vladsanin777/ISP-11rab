@@ -511,24 +511,40 @@ async def ln_command(message: aiogram.types.Message) -> None:
 
 
 
+"""
+# Создать цикл событий
+ORM()
+ds = (asyncio.run(Code().decode_1(value = TOKEN.DS_token[0], key = TOKEN.DS_token[1])))[0]
+tg = (asyncio.run(Code().decode_1(value = TOKEN.TG_token[0], key = TOKEN.TG_token[1])))[0]
 
-async def main_1(*, ds, tg):
-    print("hj")
-    # Создать цикл событий
+loop = asyncio.new_event_loop()
+# Инициализировать ботов (предполагая асинхронную инициализацию)
+asyncio.ensure_future(bot.start(ds))
+asyncio.ensure_future(dp.start_polling(aiogram.Bot(token=tg)))
+
+# Запустить цикл событий
+loop.run_forever()
+"""
+
+async def main_5():
+    # Создать ORM
     ORM()
-    loop = asyncio.get_event_loop()
-    # Инициализировать ботов (предполагая асинхронную инициализацию)
-    asyncio.ensure_future(bot.start(ds))
-    asyncio.ensure_future(dp.start_polling(aiogram.Bot(token=tg)))
 
-    # Запустить цикл событий
-    loop.run_forever()
+    # Декодировать токены
+    ds = await Code().decode_1(value = TOKEN.DS_token[0], key = TOKEN.DS_token[1])
+    tg = await Code().decode_1(value = TOKEN.TG_token[0], key = TOKEN.TG_token[1])
 
-async def main_3():
-    await asyncio.gather(main_1(
-        ds = (await asyncio.gather(Code().decode_1(value = TOKEN.DS_token[0], key = TOKEN.DS_token[1])))[0],
-        tg = (await asyncio.gather(Code().decode_1(value = TOKEN.TG_token[0], key = TOKEN.TG_token[1])))[0]
-    ))
+    # Инициализировать ботов
+    tasks = [
+        asyncio.ensure_future(dp.start_polling(aiogram.Bot(token=tg))),
+        asyncio.ensure_future(bot.start(ds)),
+    ]
+
+    # Запустить задачи
+    await asyncio.gather(*tasks)
 
 
-asyncio.run(main_3())
+# Запустить цикл событий
+asyncio.run(main_5())
+
+
