@@ -44,6 +44,7 @@ class CMDUsers3 (commands.Cog):
       ]
     )
   ):
+    print(ctx)
     print(prav)
     match prav:
       case "1МАГНИТНОЕ ПОЛЕ":

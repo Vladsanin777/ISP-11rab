@@ -27,8 +27,11 @@ class Nedelay (commands.Cog):
     result = (await asyncio.gather( element.chetnost_nedeli.ChetnostNedeli().is_even_week()))[0]
 
     for id_channel in [1181006630721179691, 1180156712150376488]:
-      last_message = self.bot.get_channel(id_channel).fetch_message(1)
-      if datetime.utcnow() - last_message.created_at < timedelta(hours=1) or last_message.author.id != 1151110889492185118:
+      channel = self.bot.get_channel(id_channel)
+      last_message = await channel.history(limit=1).flatten()
+      print(last_message)
+      print(await last_message.created_at())
+      if datetime.datetime.now() - last_message.created_at() < datetime.timedelta(hours=1) or last_message.author.id != 1151110889492185118:
         match id_channel:
           case 1181006630721179691:
             if result[0] and not(result[1]): picture = disnake.File(fp="raspisanie/raspisanie_on_nedelay/Расписание числитель.png", spoiler=False, description="Эта неделя числитель!")

@@ -125,7 +125,7 @@ async def on_ready():
 async def command_start_handler(message: aiogram.types.Message) -> None:
     await message.delete()
     ic((await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id))[0])
-    if (await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id))[0][0] is None:
+    if (await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id))[0] is None:
         await TG_Users().tg_users_edit_all_newuser(id = message.from_user.id, pofil_name = (await TG_Users().tg_users_new_name(message.from_user)), user_name = message.from_user.username, name = (name := (await TG_Users().tg_users_new_name(from_user = message.from_user))[0][0]))
     else:
         name = await TG_Users().tg_users_name(from_user = message.from_user)[0][0][0] if (n := await TG_Users().tg_users_proba_name(id_tg = message.from_user.id))[0][0][0] is None else n
@@ -304,28 +304,15 @@ async def promo(message: aiogram.types.Message):
         element.dover_isp.DoverISP().gpt_tg.clear()
     button1 = InlineKeyboardButton(text="Закрыть", callback_data='esc')
     catalog_list = InlineKeyboardMarkup(inline_keyboard=[[button1]])
-    if (message.from_user.id in element.dover_isp.DoverISP().gpt_tg or message.from_user.id in element.dover_isp.DoverISP().tg_enter_class_s or message.from_user.id in element.dover_isp.DoverISP().tg_enter_class.values()) and message_tg == element.dover_isp.DoverISP().gpt_tg_pashword:
-        await message.answer("Вы уже имеете доступ к GPT", reply_markup=catalog_list)
-    elif (message.from_user.id in element.dover_isp.DoverISP().tg_enter_class_s or message.from_user.id in element.dover_isp.DoverISP().tg_enter_class.values()) and message_tg == element.dover_isp.DoverISP().tg_enter_class_pashword:
-        await message.answer("Вы уже имеете доступ к отправке сообщений всей группе , GPT и тесту по python", reply_markup=catalog_list)
+    if message_tg == element.dover_isp.DoverISP( ).tg_enter_class_pashword:
+        await message.answer(f"Вы активировали перемиум на всё и {await TG_Users().promo_all_tg_bd(message.from_user.id)}", reply_markup=catalog_list)
     else:
-        if message_tg == element.dover_isp.DoverISP().gpt_tg_pashword:
-            element.dover_isp.DoverISP().gpt_tg.append(message.from_user.id)
-            await message.answer("Вы успешно подтвердили доступ к GPT", reply_markup=catalog_list)
-            print(element.dover_isp.DoverISP().gpt_tg)
-        elif message_tg == element.dover_isp.DoverISP( ).tg_enter_class_pashword:
-            element.dover_isp.DoverISP( ).tg_enter_class_s.append(message.from_user.id)
-            await message.answer("Вы успешно подтвердили доступ к отправке сообщений всей группе", reply_markup=catalog_list)
-        elif element.dover_isp.DoverISP().tg_test_python_pashword == message_tg:
-            if (p := (await asyncio.gather(TG_Users().tg_users_edit_premium_test_python(from_user = message.from_user)))[0][0][0]) in [False, 0]: await message.answer("Вы успешно подтвердили доступ к тесту по python", reply_markup=catalog_list)
-            elif p in [True, 1]: await message.answer("Вы уже имеете доступ к тесту по python", reply_markup=catalog_list)
-            else: 
-                ic(p)
-                await message.answer("Ошибка Получения премиума для прохождения теста по python", reply_markup=catalog_list)
-        elif not((''.join((message_tg).split())).isalpha()):
-            await message.answer("Вы не указали пароль", reply_markup=catalog_list)
-        else:
-            await message.answer("Вы ввели неверный пароль!", reply_markup=catalog_list)
+        await message.answer(f"Вы ввели не существующий промокод!", reply_markup=catalog_list)
+        
+
+
+
+
 
 @dp.message(Command(commands=["info"]))
 async def info(message: aiogram.types.Message) -> None:
@@ -355,26 +342,14 @@ class PythonTestViewTG(BaseViewTG):
 async def python_test(message: aiogram.types.Message) -> None:
     await message.delete()
     pt = PythonTestViewTG()
-
-    # Check if the user has premium test attempts left
-    attempts = (await asyncio.gather(TG_Users().tg_users_proba_proba_premium_test_python(from_user = message.from_user)))[0][0]
-
-    # Check if the user has premium test enabled
-    premium_test = (await asyncio.gather(TG_Users().tg_users_probanay_premium_test_python(from_user = message.from_user)))[0][0]
-
-    if attempts > 0 or premium_test:
-        if premium_test:
-            # If both attempts and premium test are available, prompt the user to select difficulty
+    warning, text, access = await TG_Users().tg_users_proba_and_premium_test_python(user_id = message.from_user.id)
+    if access:
+        if warning:
+            await message.answer(f"{text}\nВы действительно хотите потратить одну попытку сейчас?", reply_markup = InlineKeyboardMarkup(inline_keyboard = [[InlineKeyboardButton(text="Да", callback_data="python_test_yes"), BaseViewTG().esc]]))
+        else:
             await message.answer(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", reply_markup = pt.keyboard)
-        elif attempts == 1:
-            # If only premium test is available, prompt the user to confirm using their attempt
-            await message.answer(f"У вас осталось ПОСЛЕДНЯЯ попытка чтобы пройти тест по python\nВы действительно хотите потратить её сейчас?", reply_markup = InlineKeyboardMarkup(inline_keyboard = [[InlineKeyboardButton(text="Да", callback_data="python_test_yes"), BaseViewTG().esc]]))
-        elif attempts > 0:
-            # If only attempts are available, prompt the user to select difficulty
-            await message.answer(f"У вас осталось {attempts} попытки, чтобы пройти тест по python\nВыбирите уровень сложности или закройте если передумали.", reply_markup = pt.keyboard)
     else:
-        # If no attempts and no premium test, inform the user about their limitations
-        await message.answer("У вас закончились попытки!", reply_markup = BaseViewTG().keyboard_esc)
+        await message.answer("У вас закончились попытки и нет премиума!", reply_markup = BaseViewTG().keyboard_esc)
 
 @dp.callback_query(lambda query: query.data == 'python_test_yes')
 async def python_test_yes(query: aiogram.types.CallbackQuery):
@@ -427,7 +402,7 @@ async def enter_questions_easy_test_python(query: aiogram.types.CallbackQuery) -
     
   
 
-
+#Вызывается для обнуления сеанса лёгкого теста по пайтону и вызова нового сеанса тестирования
 @dp.callback_query(lambda query: query.data == 'test_python_pause_not_enter_easy')
 async def test_python_pause_not_enter_easy(query: aiogram.types.CallbackQuery) -> None:
     try: await query.message.delete()
@@ -436,23 +411,22 @@ async def test_python_pause_not_enter_easy(query: aiogram.types.CallbackQuery) -
     await generator_question_easy(message = query.message)
 
 
-
+#Вызывается для Продалжения сеанса лёгкого теста по пайтону
 @dp.callback_query(lambda query: query.data == 'test_python_pause_enter_easy')
 async def test_python_pause_enter_easy(query: aiogram.types.CallbackQuery) -> None:
     try: await query.message.delete()
     except: pass
     await generator_question_easy(message = query.message)
 
-
+#Проверка предидущего сеанса лёгкого теста по пайтону
 @dp.callback_query(lambda query: query.data == 'easy_python_test')
 async def easy_python_test(query: aiogram.types.CallbackQuery) -> None:
     await query.message.delete()
 
-    if (await TG_Users().testing_an_easy_Python_test(from_user_id = query.message.from_user.id)):
+    if (await TG_Users().testing_an_easy_Python_test(user_id = query.message.from_user.id)) == 0:
         await query.message.answer(f"Хотите продолжить лёгкое тестирование по Python или начать с начало!\n{await TG_Users().progress_python_test_easy(from_user_id = query.message.from_user.id)}", reply_markup = BaseViewTG().keyboard_python_test_easy)
     else:
         await test_python_pause_not_enter_easy(query = query)
-        await generator_question_easy(message = query.message)
 
     # Call easy_questions_on_test_python() with the number of questions
     #await query.message.answer(
@@ -464,10 +438,12 @@ async def easy_python_test(query: aiogram.types.CallbackQuery) -> None:
 @dp.message(Command(commands=["n"]))
 async def n(message: aiogram.types.Message) -> None:
     await message.delete()
+    button1 = InlineKeyboardButton(text="Закрыть", callback_data='esc')
+    catalog_list = InlineKeyboardMarkup(inline_keyboard=[[button1]])
     if message.from_user.id == 1976113730:
         await asyncio.gather(TG_Users().tg_users_edit_null(from_user = message.from_user))
-        await message.answer("Ваш акаунт обнулён!")
-    else: await message.answer("Снос акаунта не возможен!\nПотому что вы не являетесь тестировщиком и разработчиком бота!")
+        await message.answer("Ваш акаунт обнулён!", reply_markup=catalog_list)
+    else: await message.answer("Снос акаунта не возможен!\nПотому что вы не являетесь тестировщиком и разработчиком бота!", reply_markup=catalog_list)
 
 @dp.message(Command(commands=["nod"]))
 async def nod_command(message: aiogram.types.Message) -> None:
@@ -510,21 +486,6 @@ async def ln_command(message: aiogram.types.Message) -> None:
 
 
 
-
-"""
-# Создать цикл событий
-ORM()
-ds = (asyncio.run(Code().decode_1(value = TOKEN.DS_token[0], key = TOKEN.DS_token[1])))[0]
-tg = (asyncio.run(Code().decode_1(value = TOKEN.TG_token[0], key = TOKEN.TG_token[1])))[0]
-
-loop = asyncio.new_event_loop()
-# Инициализировать ботов (предполагая асинхронную инициализацию)
-asyncio.ensure_future(bot.start(ds))
-asyncio.ensure_future(dp.start_polling(aiogram.Bot(token=tg)))
-
-# Запустить цикл событий
-loop.run_forever()
-"""
 
 async def main_5():
     # Создать ORM

@@ -18,11 +18,11 @@ class Raspisanie (commands.Cog):
     print(f"Бот {self.bot.user} использует ког {__name__}")
 
 
-
+"""
   async def raspisanie_commands(self):
     last_message = self.bot.get_channel(1180576414479695903).fetch_message(1)
     print(last_message)
-    if datetime.utcnow() - last_message.created_at < timedelta(hours=1) or last_message.author.id != 1151110889492185118:
+    if datetime.datetime.now() - last_message.created_at < timedelta(hours=1) or last_message.author.id != 1151110889492185118:
       today = datetime.datetime.now() + datetime.timedelta(hours = 4)
       day_of_week = today.weekday()
       if today.hour > 15:
@@ -61,6 +61,6 @@ class Raspisanie (commands.Cog):
     await self.raspisanie_commands()
     await ctx.send(content = "Расписание дня обновлено!", ephemeral = True)
 
-
+"""
 def setup(bot):
   bot.add_cog(Raspisanie (bot))

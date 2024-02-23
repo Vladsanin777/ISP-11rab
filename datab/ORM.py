@@ -66,24 +66,19 @@ class TG_Users():
 
   
   
-  async def tg_users_probanay_premium_test_python(self, *, from_user):
-    with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
-      cursor = db_tg_users.cursor()
-      premium_test_python = cursor.execute("SELECT premium_test_python FROM tg_users WHERE id = ?", (from_user.id,)).fetchone()
-      if premium_test_python is None:
-        cursor.execute("INSERT INTO tg_users (id, proba_premium_test_python, pofil_name, user_name, premium_gpt, premium_test_python, answer_python_test_number_easy, enter_answer_python_test_number_easy, list_answer_python_test_number_easy, answer_python_test_number_medium, enter_answer_python_test_number_medium, list_answer_python_test_number_medium, answer_python_test_number_hard, enter_answer_python_test_number_hard, list_answer_python_test_number_hard) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (from_user.id, 3, l := ((await asyncio.gather(self.tg_users_new_name(from_user)))[0]), from_user.username, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|',))
-        return (False)
-      return premium_test_python
 
-  async def tg_users_proba_proba_premium_test_python(self, *, from_user):
+  #Проверка для теста по Pyton
+  async def tg_users_proba_and_premium_test_python(self, *, user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
-      proba_premium_test_python = cursor.execute("SELECT proba_premium_test_python FROM tg_users WHERE id = ?", (from_user.id,)).fetchone()
-      ic(proba_premium_test_python)
-      if proba_premium_test_python is None:
-        cursor.execute("INSERT INTO tg_users (id, proba_premium_test_python, pofil_name, user_name, premium_gpt, premium_test_python) VALUES (?, ?, ?, ?, ?, ?)", (from_user.id, 3, l := ((await asyncio.gather(self.tg_users_new_name(from_user)))[0]), from_user.username, False, False,))
-        return (3, proba_premium_test_python)
-      return proba_premium_test_python
+      proba_premium_test_python, premium_test_python = cursor.execute("SELECT proba_premium_test_python, premium_test_python FROM tg_users WHERE id = ?", (user_id,)).fetchone()
+      if bool(premium_test_python) is True:
+        return False, "У вас премиум!",  True
+      else:
+        if int(proba_premium_test_python) <= 0:
+          False, False, False
+        return True, f"У вас осталось {proba_premium_test_python} попыток", True
+      
 
 
   async def tg_users_edit_proba_premium_test_python(self, *, from_user):
@@ -113,16 +108,13 @@ class TG_Users():
       cursor.execute("UPDATE tg_users SET premium_test_python = ?, proba_premium_test_python = ?, premium_gpt = ? WHERE id = ?", (False, 3, False, from_user.id))
       db_tg_users.commit()
     return True
-   
-  async def testing_an_easy_Python_test(self, *, from_user_id: int):
+  
+
+  #Проверка на номер лёгкого вопроса
+  async def testing_an_easy_Python_test(self, *, user_id: int):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
       cursor = db_tg.cursor()
-      if (answer_python_test_number_easy := cursor.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (from_user_id,)).fetchone()) is None or not answer_python_test_number_easy:
-        cursor.execute("UPDATE tg_users SET answer_python_test_number_easy = ? WHERE id = ?", (0,from_user_id))
-        db_tg.commit()
-        answer_python_test_number_easy = 0
-      ic(answer_python_test_number_easy)
-      return False if 0 < answer_python_test_number_easy < 10 else True
+      return cursor.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (user_id,)).fetchone()
        
   #answer_python_test_number_easy, enter_answer_python_test_number_easy, list_answer_python_test_number_easy
 
@@ -154,7 +146,7 @@ class TG_Users():
 
 
 
-
+  #Обнуление сессии лёгкого теста по python
   async def all_easy_python_test_delete_null(self, *, from_user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
@@ -214,7 +206,36 @@ class TG_Users():
         answer_number = 0
 
       return answer_number
+    
 
+  async def check_exceptions_premium(self, user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
+      cursor = db_tg_users.cursor()
+      premium_gpt, premium_test_python = cursor.execute("""SELECT premium_gpt, premium_test_python FROM tg_users WHERE id = ?""",(user_id,),).fetchone()
+      if bool(premium_gpt) is True and bool(premium_test_python) is True:
+        return "У вас уже были все премиумы!"
+      elif bool(premium_gpt) is True:
+        return "У вас уже был премиум на GPT!"
+      elif bool(premium_test_python) is True:
+        return "У вас уже был премиум на тест по python!"
+      else:
+        return "У вас небыло премиумов!"
+
+
+
+  async def promo_all_tg_bd(self, user_id):
+    check = await self.check_exceptions_premium(user_id)
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      cursor_tg.execute("""
+        UPDATE tg_users SET 
+        premium_gpt = ?, 
+        premium_test_python = ? 
+        WHERE id = ?
+        """, (True, True, user_id,),)
+      db_tg.commit()
+    return check
+      
   
 
 
@@ -269,6 +290,9 @@ class EasyPythonTest(PythonTestBase):
   async def quantity_str(self):
     with sqlite3.connect('datab/Python/Easy_questions_on_Python.db') as db:
       return db.cursor().execute("SELECT COUNT(*) FROM Easy_questions_on_Python").fetchone()[0]
+    
+
+
 
 
 
