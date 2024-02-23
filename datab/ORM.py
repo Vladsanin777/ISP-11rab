@@ -58,7 +58,6 @@ class TG_Users():
       cursor = db_tg_users.cursor()
       cursor.execute("UPDATE tg_users SET name = ? WHERE id = ?", (new_name, from_user.id))
       db_tg_users.commit()
-      ic("Имя исправлено")
 
 
       
@@ -83,7 +82,7 @@ class TG_Users():
         return False, "У вас премиум!",  True
       else:
         if int(proba_premium_test_python) <= 0:
-          False, False, False
+          return False, False, False
         return True, f"У вас осталось {proba_premium_test_python} попыток", True
       
 
@@ -108,7 +107,6 @@ class TG_Users():
         "SELECT list_answer_python_test_number_easy FROM tg_users WHERE id = ?",
         (user_id,),
       ).fetchone()[0]
-      print(list_answer_python_test_number_easy)
       list_answer_python_test_number_easy += f"{number}|"
       cursor_tg.execute(
         "UPDATE tg_users SET list_answer_python_test_number_easy = ? WHERE id = ?",
@@ -161,7 +159,7 @@ class TG_Users():
         return "У вас небыло премиумов!"
 
 
-  #Выдача премиумов
+  #Выдача промо на акаунт
   async def promo_all_tg_bd(self, user_id):
     check = await self.check_exceptions_premium(user_id)
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
@@ -169,7 +167,7 @@ class TG_Users():
       cursor_tg.execute("""
         UPDATE tg_users SET 
         premium_gpt = ?, 
-        premium_test_python = ? 
+        premium_test_python = ?
         WHERE id = ?
         """, (True, True, user_id,),)
       db_tg.commit()
@@ -227,7 +225,7 @@ class TG_Users():
       ).fetchone()[0]
     
   #Вычетание попытки за лёгкий тест по python
-  async def edit_proba_premium_test_python(self,* , user_id):
+  async def edit_proba_premium_test_python(self, *, user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
       cursor_tg = db_tg.cursor()
       proba_premium_test_python = cursor_tg.execute(
@@ -241,13 +239,35 @@ class TG_Users():
         """, (proba_premium_test_python - 1, user_id,),)
       db_tg.commit()
 
+  #Список использованных вопросов в сессии лёгких вопросов
+  async def spisok_list_answer_python_test_number_easy(self, *, user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      spisok_list_answer_python_test_number_easy = cursor_tg.execute(
+        "SELECT list_answer_python_test_number_easy FROM tg_users WHERE id = ?",
+        (user_id,),
+      ).fetchone()[0].split("|")
+      return spisok_list_answer_python_test_number_easy
+    
+  #Обнуление акаунта
+  async def user_null(self, user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      cursor_tg.execute("""
+        UPDATE tg_users SET 
+        premium_gpt = ?, 
+        premium_test_python = ?,
+        proba_premium_test_python = ?
+        WHERE id = ?
+        """, (False, False, 3, user_id,),)
+      db_tg.commit()
+  
+
 
 
 class PythonTestBase():
   async def decoder(self, question: list):
-    ic("Декодер работает!")
     question_decoder = []
-
     # Create a Fernet key object using the encrypted key from the question
     key = Fernet(question[4])
 
@@ -261,6 +281,9 @@ class PythonTestBase():
 
     # Return the list of decoded question parts
     return question_decoder
+  
+
+  
 
 
 

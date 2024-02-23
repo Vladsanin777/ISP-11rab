@@ -124,7 +124,6 @@ async def on_ready():
 @dp.message(CommandStart())
 async def command_start_handler(message: aiogram.types.Message) -> None:
     await message.delete()
-    ic((await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id))[0])
     if (await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id))[0] is None:
         await TG_Users().tg_users_edit_all_newuser(id = message.from_user.id, pofil_name = (await TG_Users().tg_users_new_name(message.from_user)), user_name = message.from_user.username, name = (name := (await TG_Users().tg_users_new_name(from_user = message.from_user))[0][0]))
     else:
@@ -343,7 +342,6 @@ async def python_test(message: aiogram.types.Message) -> None:
     await message.delete()
     pt = PythonTestViewTG()
     warning, text, access = await TG_Users().tg_users_proba_and_premium_test_python(user_id = message.from_user.id)
-    ic(warning, text, access)
     if access:
         if warning:
             await message.answer(f"{text}\nВы действительно хотите потратить одну попытку сейчас?", reply_markup = InlineKeyboardMarkup(inline_keyboard = [[InlineKeyboardButton(text="Да", callback_data="python_test_yes"), BaseViewTG().esc]]))
@@ -368,10 +366,16 @@ async def to_nested_list(list_to_convert):
 
 #Отправляет лёгкий вопрос по Python
 async def generator_question_easy(*, query):
-    answer_question = await EasyPythonTest().easy_questions_on_test_python(number_of_questions=(random_question := random.randint(1, (await EasyPythonTest().quantity_str()))))
+    random_question = None
+    count_question = await EasyPythonTest().quantity_str()
+    spisok_using_question = await TG_Users().spisok_list_answer_python_test_number_easy(user_id = query.from_user.id)
+    while True:
+        random_question = random.randint(1, count_question)
+        if count_question < len(spisok_using_question) or str(random_question) not in spisok_using_question:
+            break
+    answer_question = await EasyPythonTest().easy_questions_on_test_python(number_of_questions = random_question)    
     answer = answer_question.copy()[1:]
     random.shuffle(answer)
-    ic(random_question)
     buttons = []
     for i in answer:
         p = i if i[0] != "~" else i[1:]
@@ -381,14 +385,15 @@ async def generator_question_easy(*, query):
     inline_keyboard = [[button] for button in buttons]
     inline_keyboard.append([InlineKeyboardButton(text="Закрыть", callback_data="esc")])
     await TG_Users().list_answer_python_test_number_easy(user_id = query.from_user.id, number = random_question)
-    ic(await TG_Users().answer_python_test_number_easy_chek(user_id = query.from_user.id))
     await query.message.answer(f"{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}\nВопрос №{(await TG_Users().answer_python_test_number_easy_chek(user_id = query.from_user.id)) + 1}\n{answer_question[0]}", reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
   
 #Выдаёт пользователю результат прохождения лёгкого теста по python или задаёт следующий вопрос
 async def end_test_python_easy(*, query):
     if (await TG_Users().progress_python_test_easy_number(user_id = query.from_user.id)) < 10:
         await generator_question_easy(query=query)
-    else: await query.message.answer(f"Вы прошли ЛЁГКИЙ тест по Python:\nВаш результат {await TG_Users().enter_answer_python_test_number_easy_chek(user_id = query.from_user.id)}/10",reply_martkup = BaseViewTG().keyboard_esc)
+    else: 
+        await query.message.answer(f"Вы прошли ЛЁГКИЙ ТЕСТ по Python:\nВаш результат {await TG_Users().enter_answer_python_test_number_easy_chek(user_id = query.from_user.id)}/10",reply_martkup = BaseViewTG().keyboard_esc)
+        await TG_Users().all_easy_python_test_delete_null(user_id = query.from_user.id)
 
 #Вызывается при неправильном ответе на лёгкий вопрос по Python
 @dp.callback_query(lambda query: query.data == 'not_enter_questions_easy_test_python')
@@ -414,6 +419,7 @@ async def enter_questions_easy_test_python(query: aiogram.types.CallbackQuery) -
 async def test_python_pause_not_enter_easy(query: aiogram.types.CallbackQuery) -> None:
     try: await query.message.delete()
     except: pass
+    await TG_Users().edit_proba_premium_test_python(user_id = query.from_user.id)
     await TG_Users().all_easy_python_test_delete_null(user_id = query.from_user.id)
     await generator_question_easy(query = query)
 
@@ -429,7 +435,6 @@ async def test_python_pause_enter_easy(query: aiogram.types.CallbackQuery) -> No
 @dp.callback_query(lambda query: query.data == 'easy_python_test')
 async def easy_python_test(query: aiogram.types.CallbackQuery) -> None:
     await query.message.delete()
-    ic(await TG_Users().testing_an_easy_Python_test(user_id = query.from_user.id))
     if (await TG_Users().testing_an_easy_Python_test(user_id = query.from_user.id)) != 0:
         await query.message.answer(f"Хотите продолжить лёгкое тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}", reply_markup = BaseViewTG().keyboard_python_test_easy)
     else:
@@ -444,7 +449,7 @@ async def n(message: aiogram.types.Message) -> None:
     button1 = InlineKeyboardButton(text="Закрыть", callback_data='esc')
     catalog_list = InlineKeyboardMarkup(inline_keyboard=[[button1]])
     if message.from_user.id == 1976113730:
-        await asyncio.gather(TG_Users().tg_users_edit_null(from_user = message.from_user))
+        await asyncio.gather(TG_Users().user_null(user_id = message.from_user.id))
         await message.answer("Ваш акаунт обнулён!", reply_markup=catalog_list)
     else: await message.answer("Снос акаунта не возможен!\nПотому что вы не являетесь тестировщиком и разработчиком бота!", reply_markup=catalog_list)
 
