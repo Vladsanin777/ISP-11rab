@@ -324,7 +324,7 @@ class BaseViewTG():
         self.esc = InlineKeyboardButton(text="Закрыть", callback_data="esc")
         self.keyboard_esc = InlineKeyboardMarkup(inline_keyboard = [[self.esc]])
         self.test_python_pause_enter_easy = InlineKeyboardButton(text="Да, хочу продолжить лёгкий тест!", callback_data="test_python_pause_enter_easy")
-        self.test_python_pause_not_enter_easy = InlineKeyboardButton(text="Нет, я хоч начать лёгкий тест сначала", callback_data="test_python_pause_not_enter_easy")
+        self.test_python_pause_not_enter_easy = InlineKeyboardButton(text="Нет, я хочу начать лёгкий тест сначала", callback_data="test_python_pause_not_enter_easy")
         self.keyboard_python_test_easy = InlineKeyboardMarkup(inline_keyboard = [[self.test_python_pause_not_enter_easy], [self.test_python_pause_enter_easy], [self.esc]])
 
 class PythonTestViewTG(BaseViewTG):
@@ -343,6 +343,7 @@ async def python_test(message: aiogram.types.Message) -> None:
     await message.delete()
     pt = PythonTestViewTG()
     warning, text, access = await TG_Users().tg_users_proba_and_premium_test_python(user_id = message.from_user.id)
+    ic(warning, text, access)
     if access:
         if warning:
             await message.answer(f"{text}\nВы действительно хотите потратить одну попытку сейчас?", reply_markup = InlineKeyboardMarkup(inline_keyboard = [[InlineKeyboardButton(text="Да", callback_data="python_test_yes"), BaseViewTG().esc]]))
@@ -355,7 +356,7 @@ async def python_test(message: aiogram.types.Message) -> None:
 async def python_test_yes(query: aiogram.types.CallbackQuery):
     await query.message.delete()
     pt = PythonTestViewTG()
-    await query.message.answer(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:\nУ ваc последняя попытка", reply_markup = pt.keyboard)
+    await query.message.answer(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", reply_markup = pt.keyboard)
 
 
 async def to_nested_list(list_to_convert):
@@ -363,8 +364,10 @@ async def to_nested_list(list_to_convert):
         return []
     
     return [[item] for item in list_to_convert]
-  
-async def generator_question_easy(*, message):
+
+
+#Отправляет лёгкий вопрос по Python
+async def generator_question_easy(*, query):
     answer_question = await EasyPythonTest().easy_questions_on_test_python(number_of_questions=(random_question := random.randint(1, (await EasyPythonTest().quantity_str()))))
     answer = answer_question.copy()[1:]
     random.shuffle(answer)
@@ -377,27 +380,31 @@ async def generator_question_easy(*, message):
 
     inline_keyboard = [[button] for button in buttons]
     inline_keyboard.append([InlineKeyboardButton(text="Закрыть", callback_data="esc")])
-    await TG_Users().list_answer_python_test_number_easy(from_user_id = message.from_user.id, number = random_question)
-    await message.answer(f"{await TG_Users().progress_python_test_easy(from_user_id = message.from_user.id)}\nВопрос №{(await TG_Users().answer_python_test_number_easy_chek(from_user_id = message.from_user.id)) + 1}\n{answer_question[0]}", reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
+    await TG_Users().list_answer_python_test_number_easy(user_id = query.from_user.id, number = random_question)
+    ic(await TG_Users().answer_python_test_number_easy_chek(user_id = query.from_user.id))
+    await query.message.answer(f"{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}\nВопрос №{(await TG_Users().answer_python_test_number_easy_chek(user_id = query.from_user.id)) + 1}\n{answer_question[0]}", reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
   
+#Выдаёт пользователю результат прохождения лёгкого теста по python или задаёт следующий вопрос
+async def end_test_python_easy(*, query):
+    if (await TG_Users().progress_python_test_easy_number(user_id = query.from_user.id)) < 10:
+        await generator_question_easy(query=query)
+    else: await query.message.answer(f"Вы прошли ЛЁГКИЙ тест по Python:\nВаш результат {await TG_Users().enter_answer_python_test_number_easy_chek(user_id = query.from_user.id)}/10",reply_martkup = BaseViewTG().keyboard_esc)
 
-async def end_test_python_easy(*, message):
-    if await TG_Users().progress_python_test_easy_number_ex_edit(from_user_id = message.from_user.id):
-        await generator_question_easy(message=message)
-    else: await message.answer(f"Вы прошли ЛЁГКИЙ тест по Python:\nВаш результат {await TG_Users().enter_answer_python_test_number_easy_chek(from_user_id = message.from_user.id)}/10",reply_martkup = BaseViewTG().keyboard_esc)
-
-
+#Вызывается при неправильном ответе на лёгкий вопрос по Python
 @dp.callback_query(lambda query: query.data == 'not_enter_questions_easy_test_python')
 async def not_enter_questions_easy_test_python(query: aiogram.types.CallbackQuery) -> None:
     await query.message.delete()
-    await end_test_python_easy(message=query.message)
+    await TG_Users().not_enter_questions_easy_test_python(user_id = query.from_user.id)
+    await end_test_python_easy(query=query)
 
 
-
+#Вызывается при правильном ответе на лёгкий вопрос по Python
 @dp.callback_query(lambda query: query.data == 'enter_questions_easy_test_python')
 async def enter_questions_easy_test_python(query: aiogram.types.CallbackQuery) -> None:
     await query.message.delete()
-    await end_test_python_easy(message=query.message)
+    await TG_Users().enter_questions_easy_test_python(user_id = query.from_user.id)
+    await end_test_python_easy(query=query)
+    
   
     
   
@@ -407,8 +414,8 @@ async def enter_questions_easy_test_python(query: aiogram.types.CallbackQuery) -
 async def test_python_pause_not_enter_easy(query: aiogram.types.CallbackQuery) -> None:
     try: await query.message.delete()
     except: pass
-    await TG_Users().all_easy_python_test_delete_null(from_user_id = query.message.from_user.id)
-    await generator_question_easy(message = query.message)
+    await TG_Users().all_easy_python_test_delete_null(user_id = query.from_user.id)
+    await generator_question_easy(query = query)
 
 
 #Вызывается для Продалжения сеанса лёгкого теста по пайтону
@@ -416,22 +423,18 @@ async def test_python_pause_not_enter_easy(query: aiogram.types.CallbackQuery) -
 async def test_python_pause_enter_easy(query: aiogram.types.CallbackQuery) -> None:
     try: await query.message.delete()
     except: pass
-    await generator_question_easy(message = query.message)
+    await generator_question_easy(query = query)
 
 #Проверка предидущего сеанса лёгкого теста по пайтону
 @dp.callback_query(lambda query: query.data == 'easy_python_test')
 async def easy_python_test(query: aiogram.types.CallbackQuery) -> None:
     await query.message.delete()
-
-    if (await TG_Users().testing_an_easy_Python_test(user_id = query.message.from_user.id)) == 0:
-        await query.message.answer(f"Хотите продолжить лёгкое тестирование по Python или начать с начало!\n{await TG_Users().progress_python_test_easy(from_user_id = query.message.from_user.id)}", reply_markup = BaseViewTG().keyboard_python_test_easy)
+    ic(await TG_Users().testing_an_easy_Python_test(user_id = query.from_user.id))
+    if (await TG_Users().testing_an_easy_Python_test(user_id = query.from_user.id)) != 0:
+        await query.message.answer(f"Хотите продолжить лёгкое тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}", reply_markup = BaseViewTG().keyboard_python_test_easy)
     else:
+        await TG_Users().edit_proba_premium_test_python(user_id = query.from_user.id)
         await test_python_pause_not_enter_easy(query = query)
-
-    # Call easy_questions_on_test_python() with the number of questions
-    #await query.message.answer(
-        #f"Вы ответили правильно на {p} из 10:\n{((i := (await EasyPythonTest().easy_questions_on_test_python(number_of_questions = (random.randint(1, p)))))[0])}", reply_markup = InlineKeyboardMarkup(inline_keyboard = [[InlineKeyboardButton(text=p[1], callback_data=f"python_test_{i}")]])
-
 
 
 

@@ -6,6 +6,7 @@ from cryptography.fernet import Fernet
 import random
 
 class TG_Users():
+  #Проверка или создание базыданных пользователей телеграмм бота
   async def tg_users_connect(self):
     try:
       with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
@@ -16,6 +17,8 @@ class TG_Users():
     except Exception as e:
       print(f"1Ошибка при создании таблицы в базе данных tg_users.db: {e}")
 
+
+  #Автоматическая регистрнатия нового пользователя
   async def tg_users_edit_all_newuser(self, *, id, pofil_name, user_name, name):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
@@ -28,6 +31,8 @@ class TG_Users():
         )
       db_tg_users.commit()
 
+
+  #Автоматическое вормерование имени нового пользователя при регистрации
   async def tg_users_name(self, *, from_user):
     try:
       name = f"{from_user.first_name} {from_user.last_name}"
@@ -37,7 +42,9 @@ class TG_Users():
       except AttributeError:
         name = from_user.username
     return name
+  
 
+  #Метод для поиска имени пользователя
   async def tg_users_proba_name(self, *, id_tg):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
@@ -45,7 +52,7 @@ class TG_Users():
       return name
 
 
-
+  #Переименование пользователя
   async def tg_users_edit_name(self, *, from_user, new_name):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
@@ -55,7 +62,7 @@ class TG_Users():
 
 
       
-
+  #Проверка на нового пользователя
   async def tg_user_poverka_new_user(self, *, id_tg):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
@@ -80,66 +87,32 @@ class TG_Users():
         return True, f"У вас осталось {proba_premium_test_python} попыток", True
       
 
-
-  async def tg_users_edit_proba_premium_test_python(self, *, from_user):
-    if 0 < (a := (await asyncio.gather(self.tg_users_proba_proba_premium_test_python(from_user = from_user)))[0][0]):
-      a -= 1
-      with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
-        cursor = db_tg_users.cursor()
-        cursor.execute("UPDATE tg_users SET proba_premium_test_python = ? WHERE id = ?", (a, from_user.id))
-        return True
-    else:
-      return False
-
-
-
-  async def tg_users_edit_premium_test_python(self, *, from_user):
-    with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
-      # Выполняем запрос
-      cursor = db_tg_users.cursor()
-      cursor.execute("UPDATE tg_users SET premium_test_python = ? WHERE id = ?", (True, from_user.id))
-      # Подтверждаем изменения
-      db_tg_users.commit()
-
-
-  async def tg_users_edit_null(self, *, from_user):
-    with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
-      cursor = db_tg_users.cursor()
-      cursor.execute("UPDATE tg_users SET premium_test_python = ?, proba_premium_test_python = ?, premium_gpt = ? WHERE id = ?", (False, 3, False, from_user.id))
-      db_tg_users.commit()
-    return True
-  
+ 
 
   #Проверка на номер лёгкого вопроса
   async def testing_an_easy_Python_test(self, *, user_id: int):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
       cursor = db_tg.cursor()
-      return cursor.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (user_id,)).fetchone()
+      return cursor.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (user_id,)).fetchone()[0]
        
-  #answer_python_test_number_easy, enter_answer_python_test_number_easy, list_answer_python_test_number_easy
+ 
 
 
 
-  async def enter_questions_easy_test_python(self, *, from_user_id):
-    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
-      cursor_tg = db_tg.cursor()
-      answer_python_test_number_easy = cursor_tg.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (from_user_id,)).fetchone()
-      answer_python_test_number_easy = answer_python_test_number_easy[0] + 1
-      cursor_tg.execute("UPDATE tg_users SET answer_python_test_number_easy = ? WHERE id = ?", (answer_python_test_number_easy, from_user_id,))
-      db_tg.commit()
 
-  async def list_answer_python_test_number_easy(self, *, from_user_id, number):
+  #Заносит в таблицу вопрос на тему лёгкие вопросы по Python который уже был задан пользователю 
+  async def list_answer_python_test_number_easy(self, *, user_id, number):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
       cursor_tg = db_tg.cursor()
       list_answer_python_test_number_easy = cursor_tg.execute(
         "SELECT list_answer_python_test_number_easy FROM tg_users WHERE id = ?",
-        (from_user_id,),
-      ).fetchone()
-      list_answer_python_test_number_easy = list_answer_python_test_number_easy[0] if list_answer_python_test_number_easy else ""
-      list_answer_python_test_number_easy = f"{list_answer_python_test_number_easy}{number}"
+        (user_id,),
+      ).fetchone()[0]
+      print(list_answer_python_test_number_easy)
+      list_answer_python_test_number_easy += f"{number}|"
       cursor_tg.execute(
-        "UPDATE tg_users SET answer_python_test_number_easy = ? WHERE id = ?",
-        (list_answer_python_test_number_easy, from_user_id,),
+        "UPDATE tg_users SET list_answer_python_test_number_easy = ? WHERE id = ?",
+        (list_answer_python_test_number_easy, user_id,),
       )
       db_tg.commit()
 
@@ -147,67 +120,33 @@ class TG_Users():
 
 
   #Обнуление сессии лёгкого теста по python
-  async def all_easy_python_test_delete_null(self, *, from_user_id):
+  async def all_easy_python_test_delete_null(self, *, user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
-      cursor.execute("UPDATE tg_users SET answer_python_test_number_easy = ?, enter_answer_python_test_number_easy = ?, list_answer_python_test_number_easy = ? WHERE id = ?", (0, 0, "|", from_user_id))
+      cursor.execute("UPDATE tg_users SET answer_python_test_number_easy = ?, enter_answer_python_test_number_easy = ?, list_answer_python_test_number_easy = ? WHERE id = ?", (0, 0, "|", user_id,),)
       db_tg_users.commit()
 
-  async def progress_python_test_easy(self, *, from_user_id):
+
+  #Возращает статистику по сеансу лёгких вопросов по Python
+  async def progress_python_test_easy(self, *, user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor_tg = db_tg_users.cursor()
-      answer_python_test_number_easy_or_enter_answer_python_test_number_easy = cursor_tg.execute(
-        "SELECT answer_python_test_number_easy , enter_answer_python_test_number_easy FROM tg_users WHERE id = ?",
-        (from_user_id,),
-      ).fetchone()
-      if answer_python_test_number_easy_or_enter_answer_python_test_number_easy is None:
-        await self.all_easy_python_test_delete_null(from_user_id=from_user_id)
-        answer_python_test_number_easy_or_enter_answer_python_test_number_easy = [0, 0]
-      answer_python_test_number_easy = answer_python_test_number_easy_or_enter_answer_python_test_number_easy[0]
-      enter_answer_python_test_number_easy = answer_python_test_number_easy_or_enter_answer_python_test_number_easy[1]
-      return f"""
-      Всего заданий выполнено: {answer_python_test_number_easy}/{10}
-      Правильно выполнено: {enter_answer_python_test_number_easy}/{answer_python_test_number_easy}
-      """
+      answer_python_test_number_easy, enter_answer_python_test_number_easy = cursor_tg.execute(
+        """SELECT answer_python_test_number_easy, enter_answer_python_test_number_easy 
+        FROM tg_users WHERE id = ?""",(user_id,),).fetchone()
+      return f"""Всего заданий выполнено: {answer_python_test_number_easy}/{10}\nПравильно выполнено: {enter_answer_python_test_number_easy}/{answer_python_test_number_easy}"""
 
 
 
-  async def progress_python_test_easy_number_ex_edit(self, *, from_user_id):
-    with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
-      cursor_tg = db_tg_users.cursor()
-
-      answer_python_test_number_easy = cursor_tg.execute(
-        "SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?",
-        (from_user_id,),
-      ).fetchone()
-
-      if answer_python_test_number_easy < 10:
-        answer_python_test_number_easy += 1
-      else:
-        answer_python_test_number_easy = 0
-      cursor_tg.execute(
-        "UPDATE tg_users SET answer_python_test_number_easy = ? WHERE id = ?",
-        (answer_python_test_number_easy, from_user_id,),
-      )
-      db_tg_users.commit()
-      return answer_python_test_number_easy
-
-  async def enter_answer_python_test_number_easy_chek(self, *, from_user_id):
+  
+  #Метод который возращает количество заданных лёгких вопросов
+  async def answer_python_test_number_easy_chek(self, *, user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
-      return cursor.execute("SELECT enter_answer_python_test_number_easy FROM tg_users WHERE id = ?", (from_user_id,)).fetchone()
+      return cursor.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (user_id,)).fetchone()[0]
 
-  async def answer_python_test_number_easy_chek(self, *, from_user_id):
-    with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
-      cursor = db_tg_users.cursor()
-      answer_number = cursor.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (from_user_id,)).fetchone()
-
-      if answer_number is None:
-        answer_number = 0
-
-      return answer_number
     
-
+  #Состояние премиумов
   async def check_exceptions_premium(self, user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
@@ -222,7 +161,7 @@ class TG_Users():
         return "У вас небыло премиумов!"
 
 
-
+  #Выдача премиумов
   async def promo_all_tg_bd(self, user_id):
     check = await self.check_exceptions_premium(user_id)
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
@@ -235,12 +174,74 @@ class TG_Users():
         """, (True, True, user_id,),)
       db_tg.commit()
     return check
-      
   
 
+  #Вызывается при не правильном ответе на лёгкий вопрос по Python
+  async def not_enter_questions_easy_test_python(self, user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      answer_python_test_number_easy = cursor_tg.execute(
+        "SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?",
+        (user_id,),
+      ).fetchone()[0]
+      cursor_tg.execute("""
+        UPDATE tg_users SET 
+        answer_python_test_number_easy = ?
+        WHERE id = ?
+        """, (answer_python_test_number_easy + 1, user_id,),)
+      db_tg.commit()
 
 
-#id=1976113730, is_bot=False, first_name='Влад', last_name='Санин', username='Vlad_sanin_777', language_code='ru', is_premium=None, added_to_attachment_menu=None, can_join_groups=None, can_read_all_group_messages=None, supports_inline_queries=None
+  #Вызывается при правильном ответе на лёгкий вопрос по Python
+  async def enter_questions_easy_test_python(self, user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      answer_python_test_number_easy, enter_answer_python_test_number_easy = cursor_tg.execute(
+        "SELECT answer_python_test_number_easy, enter_answer_python_test_number_easy FROM tg_users WHERE id = ?",
+        (user_id,),
+      ).fetchone()
+      cursor_tg.execute("""
+        UPDATE tg_users SET 
+        answer_python_test_number_easy = ?, 
+        enter_answer_python_test_number_easy = ? 
+        WHERE id = ?
+        """, (answer_python_test_number_easy + 1, enter_answer_python_test_number_easy + 1, user_id,),)
+      db_tg.commit()
+
+
+  #Проверка номера лёгкого вопроса по Python
+  async def progress_python_test_easy_number(self, *, user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      return cursor_tg.execute(
+        "SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?",
+        (user_id,),
+      ).fetchone()[0]
+  #Возращает количество правильныхответов на лёгкие вопросы по Python
+  async def enter_answer_python_test_number_easy_chek(self, *, user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      return cursor_tg.execute(
+        "SELECT enter_answer_python_test_number_easy FROM tg_users WHERE id = ?",
+        (user_id,),
+      ).fetchone()[0]
+    
+  #Вычетание попытки за лёгкий тест по python
+  async def edit_proba_premium_test_python(self,* , user_id):
+    with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
+      cursor_tg = db_tg.cursor()
+      proba_premium_test_python = cursor_tg.execute(
+        "SELECT proba_premium_test_python FROM tg_users WHERE id = ?",
+        (user_id,),
+      ).fetchone()[0]
+      cursor_tg.execute("""
+        UPDATE tg_users SET 
+        proba_premium_test_python = ?
+        WHERE id = ?
+        """, (proba_premium_test_python - 1, user_id,),)
+      db_tg.commit()
+
+
 
 class PythonTestBase():
   async def decoder(self, question: list):
@@ -270,19 +271,11 @@ class PythonTestBase():
 class EasyPythonTest(PythonTestBase):
   async def easy_questions_on_python_connect(self): print("Соединение с базой данных Easy_questions_on_Python.db успешно установленно!" if "Easy_questions_on_Python.db" in os.listdir("datab/Python") else "Ошибка при соединения с базой данных Easy_questions_on_Python.db!")
 
-
+  #Возращает и расшифровывает вопрос по его номеру
   async def easy_questions_on_test_python(self, *, number_of_questions: int):
-    ic(number_of_questions)
     with sqlite3.connect('datab/Python/Easy_questions_on_Python.db') as db:
       cursor = db.cursor()
-      ic(cursor)
       u = list(*cursor.execute("SELECT question, answer1, answer2, answer3, key FROM Easy_questions_on_Python WHERE number = ?", (number_of_questions,)))
-
-      ic(u)
-      #value = []
-      # Convert generator to awaitable task
-      #for decoded_question in await asyncio.ensure_future(self.decoder(u)):
-        #value.append(decoded_question)
       return await self.decoder(u)
 
 
