@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 
 import datetime
-
+from icecream import ic
 import asyncio
 
 import element.chetnost_nedeli
@@ -18,11 +18,12 @@ class Raspisanie (commands.Cog):
     print(f"Бот {self.bot.user} использует ког {__name__}")
 
 
-"""
+
   async def raspisanie_commands(self):
-    last_message = self.bot.get_channel(1180576414479695903).fetch_message(1)
-    print(last_message)
-    if datetime.datetime.now() - last_message.created_at < timedelta(hours=1) or last_message.author.id != 1151110889492185118:
+    channel = self.bot.get_channel(1180576414479695903)
+    last_message = await channel.history(limit=1).flatten()
+    ic(last_message)
+    if datetime.datetime.now() - last_message.created_at() < datetime.timedelta(hours=1) or last_message.author.id != 1151110889492185118:
       today = datetime.datetime.now() + datetime.timedelta(hours = 4)
       day_of_week = today.weekday()
       if today.hour > 15:
@@ -41,7 +42,6 @@ class Raspisanie (commands.Cog):
         case 4: picture = disnake.File(fp = "raspisanie/raspis_days/Пятница.png", spoiler = False, description = "На пятницу")
         case 5: picture = disnake.File(fp = "raspisanie/raspis_days/Суббота.png", spoiler = False, description = "На субботу")
         case _: picture = None
-      channel = self.bot.get_channel(1180576414479695903)
       messages = await channel.history().flatten()
       await channel.delete_messages(messages)
       await channel.send(content="", file=picture)
@@ -61,6 +61,6 @@ class Raspisanie (commands.Cog):
     await self.raspisanie_commands()
     await ctx.send(content = "Расписание дня обновлено!", ephemeral = True)
 
-"""
+
 def setup(bot):
   bot.add_cog(Raspisanie (bot))

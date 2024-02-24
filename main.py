@@ -116,10 +116,10 @@ async def reload(ctx, extension):
 @bot.event
 async def on_ready():
     print(f'Дискорд бот {bot.user} полностью загрузился')
-    asyncio.ensure_future(cogs.stabil.Stabil(bot).stabil())
-    asyncio.ensure_future(cogs.nedelay.Nedelay(bot).nedelay_loop())
+    #asyncio.ensure_future(cogs.stabil.Stabil(bot).stabil())
+    #asyncio.ensure_future(cogs.nedelay.Nedelay(bot).nedelay_loop())
 
-    asyncio.ensure_future(cogs.raspisanie_day.Raspisanie(bot).raspisanie_loop())
+    #asyncio.ensure_future(cogs.raspisanie_day.Raspisanie(bot).raspisanie_loop())
 
 @dp.message(CommandStart())
 async def command_start_handler(message: aiogram.types.Message) -> None:

@@ -224,7 +224,7 @@ class TG_Users():
         (user_id,),
       ).fetchone()[0]
     
-  #Вычетание попытки за лёгкий тест по python
+  #Вычетание попытки за  тест по python
   async def edit_proba_premium_test_python(self, *, user_id):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
       cursor_tg = db_tg.cursor()
