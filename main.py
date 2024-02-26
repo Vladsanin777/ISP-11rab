@@ -432,11 +432,20 @@ async def test_python_pause_enter_easy(query: aiogram.types.CallbackQuery) -> No
     await generator_question_easy(query = query)
 
 #Проверка предидущего сеанса лёгкого теста по пайтону
-@dp.callback_query(lambda query: query.data == 'easy_python_test')
-async def easy_python_test(query: aiogram.types.CallbackQuery) -> None:
+@dp.callback_query(lambda query: query.data in ['easy_python_test', 'medium_python_test', 'hard_python_test'])
+async def python_test(query: aiogram.types.CallbackQuery) -> None:
     await query.message.delete()
-    if (await TG_Users().testing_an_easy_Python_test(user_id = query.from_user.id)) != 0:
-        await query.message.answer(f"Хотите продолжить лёгкое тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}", reply_markup = BaseViewTG().keyboard_python_test_easy)
+    python_test = query.data.split("_")[0]
+    ic(python_test)
+    match python_test:
+        case 'easy':
+            ru_python_test = 'лёгкое'
+        case 'medium':
+            ru_python_test = 'среднее'
+        case 'hard':
+            ru_python_test = 'сложное'
+    if (await TG_Users().testing_an_Python_test(user_id = query.from_user.id, python_test = python_test)) != 0:
+        await query.message.answer(f"Хотите продолжить {ru_python_test} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}", reply_markup = BaseViewTG().keyboard_python_test_easy)
     else:
         await TG_Users().edit_proba_premium_test_python(user_id = query.from_user.id)
         await test_python_pause_not_enter_easy(query = query)

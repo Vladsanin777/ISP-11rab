@@ -89,10 +89,10 @@ class TG_Users():
  
 
   #Проверка на номер лёгкого вопроса
-  async def testing_an_easy_Python_test(self, *, user_id: int):
+  async def testing_an_Python_test(self, *, user_id: int, python_test: str):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg:
       cursor = db_tg.cursor()
-      return cursor.execute("SELECT answer_python_test_number_easy FROM tg_users WHERE id = ?", (user_id,)).fetchone()[0]
+      return cursor.execute(f"SELECT answer_python_test_number_{python_test} FROM tg_users WHERE id = ?", (user_id,)).fetchone()[0]
        
  
 
