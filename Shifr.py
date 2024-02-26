@@ -4,94 +4,97 @@ import sqlite3
 import openpyxl
 from cryptography.fernet import Fernet
 
-key = Fernet.generate_key()
-# Зашифровать строку
-cipher = Fernet(key)
-encrypted_string = cipher.encrypt(b"Hello, world!")
-
-print(encrypted_string)
-# Расшифровать строку
-decrypted_string = cipher.decrypt(encrypted_string)
-
-print(decrypted_string)
+from icecream import ic
 
 
 
+async def main_1(data):
+  # Создаем базу данных
+  with sqlite3.connect("Questions on Python.db") as conn:
+    cursor = conn.cursor()
+    # Создаем таблицу для каждого ключа в словаре
+    for sheet_name_1, rows in data.items():
+      # Создаем запрос SQL для создания таблицы
+      create_table_query = f"""
+        CREATE TABLE IF NOT EXISTS {sheet_name_1} (
+          number INTEGER,
+          question TEXT,
+          answer1 TEXT,
+          answer2 TEXT,
+          answer3 TEXT,
+          key TEXT
+        )
+      """
+      cursor.execute(create_table_query)
 
+      # Вставляем данные в таблицу
+      insert_data_query = f"""
+        INSERT INTO {sheet_name_1} (number, question, answer1, answer2, answer3, key)
+        VALUES (?, ?, ?, ?, ?, ?)
+      """
 
-# Создаем базу данных
-with sqlite3.connect("Easy questions on Python.db") as conn:
+      for row in rows:
+        cursor.execute(insert_data_query, (rows.index(row), *row,),)
 
-  # Создаем таблицу
-  cursor = conn.cursor()
-  cursor.execute("""
-  CREATE TABLE IF NOT EXISTS Easy_questions_on_Python (
-    number INTEGER,
-    question TEXT,
-    answer1 TEXT,
-    answer2 TEXT,
-    answer3 TEXT,
-    key TEXT
-  )
-  """)
-
-  
-  # Сохраняем изменения
-  conn.commit()
-  
-
-
-
-# Открываем файл Excel
-wb = openpyxl.load_workbook("Лёгкие вопросы по пайтон.xlsx")
-
-# Получаем лист с данными
-sheet = wb.active
-async def convert_1():
-  # Цикл по строкам
-  for row in range(1, (int(input("Сколько столбцов в таблице?")) + 1)):
-    # Получаем три элемента из текущей строки
-    yield [sheet.cell(row=row, column=col).value for col in range(1, 5)]
+    # Сохраняем изменения и закрываем соединение
+    conn.commit()
 
 
 
 
+async def encode_1(dict_1):
+  code_1 = {}
+  for sheet_name, rows in dict_1.items():
+    sheet_name_1 = "_".join(sheet_name.split())
+    code_3 = []
+    for row in rows:
+      key = Fernet.generate_key()
+      code_2 = []
+      for d in row:
+        code_2.append(Fernet(key).encrypt(d.encode()))
+      code_2.append(key)
+      code_3.append(code_2) 
+    code_1[sheet_name_1] = code_3
+  print(code_1)
+  return code_1
 
 
-async def adding_to_database(*, number, question, answer1, answer2, answer3, key):
-  with sqlite3.connect('Easy questions on Python.db') as db_questions:
-    cursor = db_questions.cursor()
-    cursor.execute("""
-    INSERT INTO Easy_questions_on_Python (
-      number,
-      question,
-      answer1,
-      answer2,
-      answer3,
-      key) 
-    VALUES (?, ?, ?, ?, ?, ?)""", (number, question, answer1, answer2, answer3, key,))
-    db_questions.commit()
 
-
-async def sorting(sorting: list):
-  number = 1
-  for i in sorting:
-    key = Fernet.generate_key()
-    # Зашифровать строку
-    cipher = Fernet(key)
-    u = []
-    for p in i:
-      u.append(cipher.encrypt("{}".format(p).encode('utf-8')))
-
-    await asyncio.ensure_future(adding_to_database(number=number, question=u[0], answer1=u[1], answer2=u[2], answer3=u[3], key=key))
-    number += 1
 
 
 
 async def main():
-  result = [data async for data in convert_1()]
-  print(result)
-  await asyncio.gather(sorting(result))
+  # Открываем файл Excel
+  wb = openpyxl.load_workbook("Вопросы по Python.xlsx")
+
+
+
+  # Создаем пустой словарь для хранения данных
+  data = {}
+
+  # Перебираем все листы в файле
+  for sheet in wb.worksheets:
+    # Добавляем имя листа в словарь
+    data[sheet.title] = []
+
+    # Перебираем все строки в листе
+    for row in sheet.iter_rows():
+      # Создаем список для хранения значений в строке
+      new_row = []
+
+      # Перебираем все ячейки в строке
+      for cell in row:
+        # Добавляем значение ячейки в список, если оно не пустое
+        if cell.value is not None:
+          new_row.append(cell.value)
+
+      # Добавляем строку в список только если она не пустая
+      if new_row:
+        data[sheet.title].append(new_row)
+
+  # Выводим словарь
+  print(data)
+  await main_1(await encode_1(data))
 
 asyncio.run(main())
 
