@@ -439,13 +439,29 @@ async def python_test(query: aiogram.types.CallbackQuery) -> None:
     ic(python_test)
     match python_test:
         case 'easy':
-            ru_python_test = 'лёгкое'
+            ru_python_test_1 = 'лёгкое'
+            ru_python_test_2 = 'лёгкий'
         case 'medium':
-            ru_python_test = 'среднее'
+            ru_python_test_1 = 'среднее'
+            ru_python_test_2 = 'средний'
         case 'hard':
-            ru_python_test = 'сложное'
+            ru_python_test_1 = 'сложное'
+            ru_python_test_2 = 'сложный'
     if (await TG_Users().testing_an_Python_test(user_id = query.from_user.id, python_test = python_test)) != 0:
-        await query.message.answer(f"Хотите продолжить {ru_python_test} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}", reply_markup = BaseViewTG().keyboard_python_test_easy)
+        await query.message.answer(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test_easy(user_id = query.from_user.id)}", 
+            reply_markup = InlineKeyboardMarkup(inline_keyboard = 
+                [
+                    [InlineKeyboardButton(
+                        text=f"Нет, я хочу начать {ru_python_test_2} тест сначала", 
+                        callback_data=f"test_python_pause_not_enter_{python_test}")
+                    ],
+                    [InlineKeyboardButton(
+                        text=f"Да, хочу продолжить {ru_python_test_2} тест!", 
+                        callback_data=f"test_python_pause_not_enter_{python_test}")
+                    ]
+                ]
+            )
+        )
     else:
         await TG_Users().edit_proba_premium_test_python(user_id = query.from_user.id)
         await test_python_pause_not_enter_easy(query = query)
