@@ -82,7 +82,7 @@ async def main_2():
 intents = disnake.Intents.default()
 intents.message_content = True  # Добавить эту строку
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot()
 
 
 # Инициализируем бота Telegram
@@ -91,38 +91,17 @@ bot_t = aiogram.Bot(token=tg)
 dp = aiogram.Dispatcher()
 
 
-@bot.command()
-@commands.is_owner()
-async def load(ctx, extension):
-    bot.load_extension(f"cogs.{extension}")
+
+@bot.slash_command()
+async def server(inter):
+    await inter.response.send_message(
+        f"Название сервера: {inter.guild.name}\nВсего участников: {inter.guild.member_count}"
+    )
+
+bot.load_extension('cogs.calcbot')
 
 
-@bot.command()
-@commands.is_owner()
-async def unload(ctx, extension):
-    bot.unload_extension(f"cogs.{extension}")
 
-
-@bot.command()
-@commands.is_owner()
-async def reload(ctx, extension):
-    bot.reload_extension(f"cogs.{extension}")
-    for filename in os.listdir("cogs"):
-        if filename.endswith(".py"):
-            yui = f"cogs.{filename[:-3]}"
-            try:
-                bot.load_extension(yui)
-            except BaseException:
-                print(f"Не удалось загрузить {yui}")
-
-
-@bot.event
-async def on_ready():
-    print(f'Дискорд бот {bot.user} полностью загрузился')
-    #asyncio.ensure_future(cogs.stabil.Stabil(bot).stabil())
-    #asyncio.ensure_future(cogs.nedelay.Nedelay(bot).nedelay_loop())
-
-    #asyncio.ensure_future(cogs.raspisanie_day.Raspisanie(bot).raspisanie_loop())
 
 @dp.message(CommandStart())
 async def command_start_handler(message: aiogram.types.Message) -> None:
@@ -518,7 +497,7 @@ async def ln_command(message: aiogram.types.Message) -> None:
     await message.answer(f"ln или log с основанием числа e = {math.e}:\nЧисела: {arg[0]}\nРавняется: {result}")
 
 
-
+"""
 async def main_5():
     # Создать ORM
     ORM()
@@ -533,9 +512,28 @@ async def main_5():
 
     # Запустить задачи
     await asyncio.gather(*tasks)
+"""
 
 
-# Запустить цикл событий
-asyncio.run(main_5())
+
+
+
+@bot.event
+async def on_ready():
+    print(f'Дискорд бот {bot.user} полностью загрузился')
+
+    #Запускаем Телеграм бота
+    await dp.start_polling(bot_t)
+
+    #------------------------------------
+    #asyncio.ensure_future(cogs.stabil.Stabil(bot).stabil())
+    #asyncio.ensure_future(cogs.nedelay.Nedelay(bot).nedelay_loop())
+
+    #asyncio.ensure_future(cogs.raspisanie_day.Raspisanie(bot).raspisanie_loop())
+
+
+ds = asyncio.run(Code().decode_1(value = TOKEN.DS_token[0], key = TOKEN.DS_token[1]))
+#Запускаем Дискорд бота
+bot.run(ds)
 
 
