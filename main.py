@@ -82,7 +82,7 @@ async def main_2():
 intents = disnake.Intents.default()
 intents.message_content = True  # Добавить эту строку
 
-bot = commands.Bot()
+bot = commands.Bot(command_prefix='!')
 
 
 # Инициализируем бота Telegram
@@ -98,7 +98,13 @@ async def server(inter):
         f"Название сервера: {inter.guild.name}\nВсего участников: {inter.guild.member_count}"
     )
 
-bot.load_extension('cogs.calcbot')
+for i in os.listdir("cogs"):
+    if i.endswith(".py"):
+        ic(i)
+        try:
+            bot.load_extension(f'cogs.{i[:-3]}')
+        except:
+            print(f"Неудалось загрузить {i}")
 
 
 
