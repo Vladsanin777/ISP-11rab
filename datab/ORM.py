@@ -19,15 +19,15 @@ class TG_Users():
 
 
   #Автоматическая регистрнатия нового пользователя
-  async def tg_users_edit_all_newuser(self, *, id, pofil_name, user_name, name):
+  async def tg_users_edit_all_newuser(self, *, id, pofil_name, user_name):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
       if (cursor.execute("SELECT id FROM tg_users WHERE id = ?", (int(id),)).fetchone()) is None:
-        cursor.execute("INSERT INTO tg_users (id, proba_premium_test_python, pofil_name, user_name, premium_gpt, premium_test_python, answer_python_test_number_easy, enter_answer_python_test_number_easy, list_answer_python_test_number_easy, answer_python_test_number_medium, enter_answer_python_test_number_medium, list_answer_python_test_number_medium, answer_python_test_number_hard, enter_answer_python_test_number_hard, list_answer_python_test_number_hard, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, 3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', name,))
+        cursor.execute("INSERT INTO tg_users (id, proba_premium_test_python, pofil_name, user_name, premium_gpt, premium_test_python, answer_python_test_number_easy, enter_answer_python_test_number_easy, list_answer_python_test_number_easy, answer_python_test_number_medium, enter_answer_python_test_number_medium, list_answer_python_test_number_medium, answer_python_test_number_hard, enter_answer_python_test_number_hard, list_answer_python_test_number_hard, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, 3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', None,))
       else:
         cursor.execute(
           "UPDATE tg_users SET proba_premium_test_python = ?, pofil_name = ?, user_name = ?, premium_gpt = ?, premium_test_python = ?, answer_python_test_number_easy = ?, enter_answer_python_test_number_easy = ?, list_answer_python_test_number_easy = ?, answer_python_test_number_medium = ?, enter_answer_python_test_number_medium = ?, list_answer_python_test_number_medium = ?, answer_python_test_number_hard = ?, enter_answer_python_test_number_hard = ?, list_answer_python_test_number_hard = ?, name = ? WHERE id = ?",
-          (3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', name, id)
+          (3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', None, id)
         )
       db_tg_users.commit()
 
@@ -64,7 +64,7 @@ class TG_Users():
   async def tg_user_poverka_new_user(self, *, id_tg):
     with sqlite3.connect('datab/TG/tg_users.db') as db_tg_users:
       cursor = db_tg_users.cursor()
-      return cursor.execute("SELECT id FROM tg_users WHERE id = ?", (id_tg,)).fetchone()[0]
+      return cursor.execute("SELECT id FROM tg_users WHERE id = ?", (id_tg,)).fetchone()
     
 
   #Проверка для GPT
@@ -270,7 +270,7 @@ class TG_Users():
 
 
 
-class DS_users():
+class DS_Users():
   #Проверка или создание базыданных пользователей телеграмм бота
   async def ds_users_connect(self):
     try:
@@ -282,29 +282,26 @@ class DS_users():
     except Exception as e:
       print(f"1Ошибка при создании таблицы в базе данных ds_users.db: {e}")
 
-  #Автоматическая регистрнатия нового пользователя
-  async def ds_users_edit_all_newuser(self, *, id, pofil_name, user_name, name):
+  #Автоматическая регистрнатия нового пользователя или Обнуление существующего
+  async def ds_users_edit_all_newuser(self, *, id, pofil_name, user_name):
     with sqlite3.connect('datab/DS/ds_users.db') as db_ds_users:
       cursor = db_ds_users.cursor()
       if (cursor.execute("SELECT id FROM ds_users WHERE id = ?", (int(id),)).fetchone()) is None:
-        cursor.execute("INSERT INTO ds_users (id, proba_premium_test_python, pofil_name, user_name, premium_gpt, premium_test_python, answer_python_test_number_easy, enter_answer_python_test_number_easy, list_answer_python_test_number_easy, answer_python_test_number_medium, enter_answer_python_test_number_medium, list_answer_python_test_number_medium, answer_python_test_number_hard, enter_answer_python_test_number_hard, list_answer_python_test_number_hard, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, 3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', name,))
+        cursor.execute("INSERT INTO ds_users (id, proba_premium_test_python, pofil_name, user_name, premium_gpt, premium_test_python, answer_python_test_number_easy, enter_answer_python_test_number_easy, list_answer_python_test_number_easy, answer_python_test_number_medium, enter_answer_python_test_number_medium, list_answer_python_test_number_medium, answer_python_test_number_hard, enter_answer_python_test_number_hard, list_answer_python_test_number_hard, name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, 3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', None,))
       else:
         cursor.execute(
           "UPDATE ds_users SET proba_premium_test_python = ?, pofil_name = ?, user_name = ?, premium_gpt = ?, premium_test_python = ?, answer_python_test_number_easy = ?, enter_answer_python_test_number_easy = ?, list_answer_python_test_number_easy = ?, answer_python_test_number_medium = ?, enter_answer_python_test_number_medium = ?, list_answer_python_test_number_medium = ?, answer_python_test_number_hard = ?, enter_answer_python_test_number_hard = ?, list_answer_python_test_number_hard = ?, name = ? WHERE id = ?",
-          (3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', name, id)
+          (3, pofil_name, user_name, False, False, 0, 0, '|', 0, 0, '|', 0, 0, '|', None, id)
         )
       db_ds_users.commit()
 
 
   #Автоматическое вормерование имени нового пользователя при регистрации
-  async def ds_users_name(self, *, from_user):
+  async def ds_users_name(self, *, ctx):
     try:
-      name = f"{from_user.first_name} {from_user.last_name}"
+      name = ctx.author.display_name
     except AttributeError:
-      try:
-        name = from_user.first_name
-      except AttributeError:
-        name = from_user.username
+      name = ctx.author.name
     return name
   
 
@@ -328,7 +325,7 @@ class DS_users():
   async def ds_user_poverka_new_user(self, *, id_ds):
     with sqlite3.connect('datab/DS/ds_users.db') as db_ds_users:
       cursor = db_ds_users.cursor()
-      return cursor.execute("SELECT id FROM ds_users WHERE id = ?", (id_ds,)).fetchone()[0]
+      return cursor.execute("SELECT id FROM ds_users WHERE id = ?", (id_ds,)).fetchone()
     
 
   #Проверка для GPT
@@ -567,7 +564,7 @@ class PythonTestBase():
    
 
 class PythonTest(PythonTestBase):
-  async def questions_on_python_connect(self): print("Соединение с базой данных Questions on Python.db успешно установленно!" if "Questions on Python" in os.listdir("datab/Python") else "Ошибка при соединения с базой данных Questions on Python.db!")
+  async def questions_on_python_connect(self): print("Соединение с базой данных Questions on Python.db успешно установленно!" if "Questions on Python.db" in os.listdir("datab/Python") else "Ошибка при соединения с базой данных Questions on Python.db!")
 
   #Возращает и расшифровывает вопрос по его номеру
   async def questions_on_test_python(self, *, number_of_questions: int, python_test):
@@ -605,7 +602,9 @@ class PythonTest(PythonTestBase):
 
 
 
-class ORM(TG_Users, PythonTest):    
+class ORM(TG_Users, PythonTest, DS_Users):    
   def __init__(self):
+    print("Начало запуска баз данных! ")
+    asyncio.ensure_future(self.ds_users_connect())
     asyncio.ensure_future(self.tg_users_connect())
     asyncio.ensure_future( self.questions_on_python_connect())

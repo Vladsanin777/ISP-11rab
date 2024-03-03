@@ -20,7 +20,6 @@ class CMDUsers1 (commands.Cog):
 
 
 
-
   @commands.slash_command(
     name = "нод",
     description = "Двух чисел"

@@ -103,8 +103,8 @@ for i in os.listdir("cogs"):
         ic(i)
         try:
             bot.load_extension(f'cogs.{i[:-3]}')
-        except:
-            print(f"Неудалось загрузить {i}")
+        except Exception as e:
+            print(f"Неудалось загрузить {i}: {type(e).__name__} - {e}")
 
 
 
@@ -113,7 +113,7 @@ for i in os.listdir("cogs"):
 async def command_start_handler(message: aiogram.types.Message) -> None:
     await message.delete()
     if (await TG_Users().tg_user_poverka_new_user(id_tg = message.from_user.id)) is None:
-        await TG_Users().tg_users_edit_all_newuser(id = message.from_user.id, pofil_name = (name := (await TG_Users().tg_users_name(from_user = message.from_user))), user_name = message.from_user.username, name = name)
+        await TG_Users().tg_users_edit_all_newuser(id = message.from_user.id, pofil_name = await TG_Users().tg_users_name(from_user = message.from_user), user_name = message.from_user.username, name = name)
     else:
         if (n := await TG_Users().tg_users_proba_name(id_tg = message.from_user.id)) is None: 
             name = await TG_Users().tg_users_name(from_user = message.from_user)
@@ -528,9 +528,14 @@ async def main_5():
 async def on_ready():
     print(f'Дискорд бот {bot.user} полностью загрузился')
 
+
+    #Запускаем работу баз данных
+    ORM()
+
+
     #Запускаем Телеграм бота
     await dp.start_polling(bot_t)
-
+    
     #------------------------------------
     #asyncio.ensure_future(cogs.stabil.Stabil(bot).stabil())
     #asyncio.ensure_future(cogs.nedelay.Nedelay(bot).nedelay_loop())
