@@ -74,7 +74,9 @@ class Python_test(commands.Cog):
             try:
                 await message.delete()
             except:
+                await message.close()
                 channel = self.bot.get_channel(interaction.message.channel.id)
+                print(f"{channel} канал")
                 message_1 = await channel.fetch_message(interaction.message.id)
                 print(f"{message_1} удаление")
                 await message_1.delete()
