@@ -437,7 +437,7 @@ async def python_test(query: aiogram.types.CallbackQuery) -> None:
                     ],
                     [InlineKeyboardButton(
                         text=f"Да, хочу продолжить {ru_python_test_2} тест!", 
-                        callback_data=f"test_python_pause_not_enter_{python_test}")
+                        callback_data=f"test_python_pause_enter_{python_test}")
                     ],
                     [InlineKeyboardButton(
                         text=f"Закрыть", 

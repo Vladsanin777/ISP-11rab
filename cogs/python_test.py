@@ -93,50 +93,16 @@ class Python_test(commands.Cog):
                         ru_python_test_2 = 'сложный'
                 if (await DS_Users().testing_an_Python_test(user_id = interaction.author.id, python_test = python_test)) != 0:
                     view_1 = disnake.ui.View()
+                    view_1.add_item(disnake.ui.Button(label = f"Нет, я хочу начать {ru_python_test_2} тест сначала", custom_id = f"test_python_pause_not_enter_{python_test}"))
+                    view_1.add_item(disnake.ui.Button(label = f"Да, хочу продолжить {ru_python_test_2} тест!", custom_id = f"test_python_pause_enter_{python_test}"))
+                    view_1.add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
                     await interaction.response.send_message(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test(user_id = query.from_user.id, python_test = python_test)}", view = view_1)
-                                               
-                
+                else:
+                    await DS_Users().edit_proba_premium_test_python(user_id = interaction.author.id)
+                    await self.test_python_pause_not_enter(interaction = interaction, python_test = python_test)
 
-    @dp.callback_query(lambda query: query.data in ['easy_python_test', 'medium_python_test', 'hard_python_test'])
-async def python_test(query: aiogram.types.CallbackQuery) -> None:
-    await query.message.delete()
-    python_test = query.data.split("_")[0]
-    ic(python_test)
-    match python_test:
-        case 'easy':
-            ru_python_test_1 = 'лёгкое'
-            ru_python_test_2 = 'лёгкий'
-        case 'medium':
-            ru_python_test_1 = 'среднее'
-            ru_python_test_2 = 'средний'
-        case 'hard':
-            ru_python_test_1 = 'сложное'
-            ru_python_test_2 = 'сложный'
-    if (await TG_Users().testing_an_Python_test(user_id = query.from_user.id, python_test = python_test)) != 0:
-        await query.message.answer(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test(user_id = query.from_user.id, python_test = python_test)}", 
-            reply_markup = InlineKeyboardMarkup(inline_keyboard = 
-                [
-                    [InlineKeyboardButton(
-                        text=f"Нет, я хочу начать {ru_python_test_2} тест сначала", 
-                        callback_data=f"test_python_pause_not_enter_{python_test}")
-                    ],
-                    [InlineKeyboardButton(
-                        text=f"Да, хочу продолжить {ru_python_test_2} тест!", 
-                        callback_data=f"test_python_pause_not_enter_{python_test}")
-                    ],
-                    [InlineKeyboardButton(
-                        text=f"Закрыть", 
-                        callback_data="esc")
-
-                    ]
-                ]
-            )
-        )
-    else:
-        await TG_Users().edit_proba_premium_test_python(user_id = query.from_user.id)
-        await test_python_pause_not_enter(query = query, python_test = python_test)
-
-
+    async def test_python_pause_not_enter(interaction, python_test):
+        
 
 
 
