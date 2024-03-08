@@ -57,32 +57,84 @@ class Python_test(commands.Cog):
         if access:
             if warning:
                 view_1.add_item(disnake.ui.Button(label = "Да", custom_id = "python_test_yes")).add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
-                await ctx.response.send_message(f"{text}\nВы действительно хотите потратить одну попытку сейчас?", view = view_1, ephemeral=True)
+                await ctx.response.send_message(f"{text}\nВы действительно хотите потратить одну попытку сейчас?", view = view_1)
             else:
                 view_1.add_item(disnake.ui.Button(label = "Лёгкий", custom_id = "easy_python_test")).add_item(disnake.ui.Button(label = "Средний", custom_id = "medium_python_test")).add_item(disnake.ui.Button(label = "Сложный", custom_id = "hard_python_test")).add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
-                await ctx.response.send_message(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", view = view_1, ephemeral=True)
+                await ctx.response.send_message(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", view = view_1)
         else:
             view_1.add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
-            await ctx.response.send_message("У вас закончились попытки и нет премиума!", view = view_1, ephemeral=True)
+            await ctx.response.send_message("У вас закончились попытки и нет премиума!", view = view_1)
 
 
     @commands.Cog.listener()
     async def on_button_click(self, interaction: disnake.Interaction):
-        if interaction.data.custom_id == 'esc':
-            message = interaction.message
-            print(message)
-            try:
-                await message.delete()
-            except:
-                await message.close()
-                channel = self.bot.get_channel(interaction.message.channel.id)
-                print(f"{channel} канал")
-                message_1 = await channel.fetch_message(interaction.message.id)
-                print(f"{message_1} удаление")
-                await message_1.delete()
+        d = interaction.data.custom_id
+        match d:
+            case 'esc':
+                await interaction.message.delete()
+            case 'python_test_yes':
+                await interaction.message.delete()
+                view_1 = disnake.ui.View()
+                view_1.add_item(disnake.ui.Button(label = "Лёгкий", custom_id = "easy_python_test")).add_item(disnake.ui.Button(label = "Средний", custom_id = "medium_python_test")).add_item(disnake.ui.Button(label = "Сложный", custom_id = "hard_python_test")).add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
+                await interaction.response.send_message(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", view = view_1)
+            case 'easy_python_test' | 'medium_python_test' | 'hard_python_test':
+                await interaction.message.delete()
+                python_test = d.split("_")[0]
+                ic(python_test)
+                match python_test:
+                    case 'easy':
+                        ru_python_test_1 = 'лёгкое'
+                        ru_python_test_2 = 'лёгкий'
+                    case 'medium':
+                        ru_python_test_1 = 'среднее'
+                        ru_python_test_2 = 'средний'
+                    case 'hard':
+                        ru_python_test_1 = 'сложное'
+                        ru_python_test_2 = 'сложный'
+                if (await DS_Users().testing_an_Python_test(user_id = interaction.author.id, python_test = python_test)) != 0:
+                    view_1 = disnake.ui.View()
+                    await interaction.response.send_message(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test(user_id = query.from_user.id, python_test = python_test)}", view = view_1)
+                                               
+                
 
+    @dp.callback_query(lambda query: query.data in ['easy_python_test', 'medium_python_test', 'hard_python_test'])
+async def python_test(query: aiogram.types.CallbackQuery) -> None:
+    await query.message.delete()
+    python_test = query.data.split("_")[0]
+    ic(python_test)
+    match python_test:
+        case 'easy':
+            ru_python_test_1 = 'лёгкое'
+            ru_python_test_2 = 'лёгкий'
+        case 'medium':
+            ru_python_test_1 = 'среднее'
+            ru_python_test_2 = 'средний'
+        case 'hard':
+            ru_python_test_1 = 'сложное'
+            ru_python_test_2 = 'сложный'
+    if (await TG_Users().testing_an_Python_test(user_id = query.from_user.id, python_test = python_test)) != 0:
+        await query.message.answer(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test(user_id = query.from_user.id, python_test = python_test)}", 
+            reply_markup = InlineKeyboardMarkup(inline_keyboard = 
+                [
+                    [InlineKeyboardButton(
+                        text=f"Нет, я хочу начать {ru_python_test_2} тест сначала", 
+                        callback_data=f"test_python_pause_not_enter_{python_test}")
+                    ],
+                    [InlineKeyboardButton(
+                        text=f"Да, хочу продолжить {ru_python_test_2} тест!", 
+                        callback_data=f"test_python_pause_not_enter_{python_test}")
+                    ],
+                    [InlineKeyboardButton(
+                        text=f"Закрыть", 
+                        callback_data="esc")
 
-
+                    ]
+                ]
+            )
+        )
+    else:
+        await TG_Users().edit_proba_premium_test_python(user_id = query.from_user.id)
+        await test_python_pause_not_enter(query = query, python_test = python_test)
 
 
 
