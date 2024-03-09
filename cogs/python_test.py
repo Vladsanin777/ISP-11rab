@@ -3,7 +3,7 @@ from disnake.ext import commands
 import random
 from icecream import ic
 
-from datab.ORM import DS_Users
+from datab.ORM import DS_Users, PythonTest
 
 
 
@@ -83,6 +83,26 @@ class Python_test(commands.Cog):
             case 'enter_questions_easy_test_python' | 'enter_questions_medium_test_python' | 'enter_questions_hard_test_python':
                 await self.enter_questions_test_python(interaction = interaction, python_test = d.split("_")[2])
 
+    #Выдаёт пользователю результат прохождения лёгкого теста по python или задаёт следующий вопрос
+    async def end_test_python(*, interaction, python_test):
+        if (await DS_Users().progress_python_test_number(user_id = interaction.author.id, python_test = python_test)) < 10:
+            await generator_question_python(interaction=interaction, python_test = python_test)
+        else: 
+            match python_test:
+                case 'easy':
+                    ru_python_test = 'ЛЁГКИЙ'
+                case 'medium':
+                    ru_python_test = 'СРЕДНИЙ'
+                case 'hard':
+                    ru_python_test = 'СЛОЖНЫЙ'
+            print('Работает')
+            python_result = f"Вы прошли {ru_python_test} ТЕСТ по Python:\nВаш результат {await DS_Users().enter_answer_python_test_number_chek(user_id = interaction.author.id, python_test = python_test)}/10"
+            view_1 = disnake.ui.View()
+            view_1.add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
+            await interaction.response.send_message(python_result, view = view_1)
+            await DS_Users().all_python_test_delete_null(user_id = interaction.author.id, python_test = python_test)
+
+
     async def enter_questions_test_python(self, interaction, python_test):
         await interaction.message.delete()
         await DS_Users().enter_questions_test_python(user_id = interaction.author.id, python_test = python_test)
@@ -93,6 +113,7 @@ class Python_test(commands.Cog):
         view_1 = disnake.ui.View()
         view_1.add_item(disnake.ui.Button(label = "Лёгкий", custom_id = "easy_python_test")).add_item(disnake.ui.Button(label = "Средний", custom_id = "medium_python_test")).add_item(disnake.ui.Button(label = "Сложный", custom_id = "hard_python_test")).add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
         await interaction.response.send_message(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", view = view_1)
+        
     async def test_python_pause_not_enter(self, interaction, python_test):
         try: await interaction.message.delete()
         except: pass
@@ -123,23 +144,21 @@ class Python_test(commands.Cog):
             view_1.add_item(disnake.ui.Button(label = f"Нет, я хочу начать {ru_python_test_2} тест сначала", custom_id = f"test_python_pause_not_enter_{python_test}"))
             view_1.add_item(disnake.ui.Button(label = f"Да, хочу продолжить {ru_python_test_2} тест!", custom_id = f"test_python_pause_enter_{python_test}"))
             view_1.add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
-            await interaction.response.send_message(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test(user_id = query.from_user.id, python_test = python_test)}", view = view_1)
+            await interaction.response.send_message(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await DS_Users().progress_python_test(user_id = interaction.author.id, python_test = python_test)}", view = view_1)
         else:
             await DS_Users().edit_proba_premium_test_python(user_id = interaction.author.id)
             await self.test_python_pause_not_enter(interaction = interaction, python_test = python_test)
 
-    """
+ 
     async def generator_question_python_ds(self, interaction, python_test):
-        count_question = ...  # Calculate or retrieve question count
-        used_questions = ...  # Get list of used question IDs
-
+        random_question = None
+        count_question = await PythonTest().quantity_str(python_test = python_test)
+        spisok_using_question = await DS_Users().spisok_list_answer_python_test_number(user_id = interaction.author.id, python_test = python_test)
         while True:
             random_question = random.randint(0, count_question - 1)
-            if count_question < len(used_questions) or str(random_question) not in used_questions:
+            if count_question < len(spisok_using_question) or str(random_question) not in spisok_using_question:
                 break
-
-        # Replace with equivalent logic from `questions_on_test_python`
-        answer_question = ...  # Get question content and answer choices
+        answer_question = await PythonTest().questions_on_test_python(number_of_questions = random_question, python_test = python_test)    
 
         answer = answer_question.copy()[1:]
         random.shuffle(answer)
@@ -148,16 +167,13 @@ class Python_test(commands.Cog):
             disnake.ui.Button(label=p, custom_id=f"not_enter_questions_{python_test}_test_python" if p is i else f"enter_questions_{python_test}_test_python")
             for i, p in enumerate(answer)
         ]
-
+        ic(buttons)
         view = disnake.ui.View(children=buttons)
         view.add_item(disnake.ui.Button(label="Close", custom_id="esc"))
 
-        # Track user progress and question number (replace with appropriate logic)
-        progress = ...
-        question_number = ...
+        await DS_Users().list_answer_python_test_number(user_id = interaction.author.id, number = random_question, python_test = python_test)
 
-        await ctx.send(f"{progress}\nQuestion #{question_number + 1}\n{answer_question[0]}", view=view)
-    """
+        await interaction.response.send_message(f"{await DS_Users().progress_python_test(user_id = interaction.author.id, python_test = python_test)}\nВопрос №{(await DS_Users().answer_python_test_number_chek(user_id = interaction.author.id, python_test = python_test)) + 1}\n{answer_question[0]}", view = view)
 
 
 
