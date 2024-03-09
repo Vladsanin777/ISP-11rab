@@ -73,41 +73,63 @@ class Python_test(commands.Cog):
             case 'esc':
                 await interaction.message.delete()
             case 'python_test_yes':
-                await interaction.message.delete()
-                view_1 = disnake.ui.View()
-                view_1.add_item(disnake.ui.Button(label = "Лёгкий", custom_id = "easy_python_test")).add_item(disnake.ui.Button(label = "Средний", custom_id = "medium_python_test")).add_item(disnake.ui.Button(label = "Сложный", custom_id = "hard_python_test")).add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
-                await interaction.response.send_message(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", view = view_1)
+                await self.python_test_yes(interaction = interaction)
             case 'easy_python_test' | 'medium_python_test' | 'hard_python_test':
-                await interaction.message.delete()
-                python_test = d.split("_")[0]
-                ic(python_test)
-                match python_test:
-                    case 'easy':
-                        ru_python_test_1 = 'лёгкое'
-                        ru_python_test_2 = 'лёгкий'
-                    case 'medium':
-                        ru_python_test_1 = 'среднее'
-                        ru_python_test_2 = 'средний'
-                    case 'hard':
-                        ru_python_test_1 = 'сложное'
-                        ru_python_test_2 = 'сложный'
-                if (await DS_Users().testing_an_Python_test(user_id = interaction.author.id, python_test = python_test)) != 0:
-                    view_1 = disnake.ui.View()
-                    view_1.add_item(disnake.ui.Button(label = f"Нет, я хочу начать {ru_python_test_2} тест сначала", custom_id = f"test_python_pause_not_enter_{python_test}"))
-                    view_1.add_item(disnake.ui.Button(label = f"Да, хочу продолжить {ru_python_test_2} тест!", custom_id = f"test_python_pause_enter_{python_test}"))
-                    view_1.add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
-                    await interaction.response.send_message(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test(user_id = query.from_user.id, python_test = python_test)}", view = view_1)
-                else:
-                    await DS_Users().edit_proba_premium_test_python(user_id = interaction.author.id)
-                    await self.test_python_pause_not_enter(interaction = interaction, python_test = python_test)
+                await self.python_test(interaction = interaction, python_test = d.split("_")[0])
+            case 'test_python_pause_not_enter_easy' | 'test_python_pause_not_enter_medium' | 'test_python_pause_not_enter_hard':
+                await self.test_python_pause_not_enter(interaction = interaction, python_test = d.split("_")[5])
+            case 'test_python_pause_enter_easy' | 'test_python_pause_enter_medium' | 'test_python_pause_enter_hard':
+                await self.test_python_pause_enter(interaction = interaction, python_test = d.split("_")[4])
+            case 'enter_questions_easy_test_python' | 'enter_questions_medium_test_python' | 'enter_questions_hard_test_python':
+                await self.enter_questions_test_python(interaction = interaction, python_test = d.split("_")[2])
 
-    async def test_python_pause_not_enter(interaction, python_test):
-        
+    async def enter_questions_test_python(self, interaction, python_test):
+        await interaction.message.delete()
+        await DS_Users().enter_questions_test_python(user_id = interaction.author.id, python_test = python_test)
+        await self.end_test_python(interaction = interaction, python_test = python_test)
 
+    async def python_test_yes(interaction):
+        await interaction.message.delete()
+        view_1 = disnake.ui.View()
+        view_1.add_item(disnake.ui.Button(label = "Лёгкий", custom_id = "easy_python_test")).add_item(disnake.ui.Button(label = "Средний", custom_id = "medium_python_test")).add_item(disnake.ui.Button(label = "Сложный", custom_id = "hard_python_test")).add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
+        await interaction.response.send_message(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", view = view_1)
+    async def test_python_pause_not_enter(self, interaction, python_test):
+        try: await interaction.message.delete()
+        except: pass
+        await DS_Users().edit_proba_premium_test_python(user_id = interaction.author.id)
+        await DS_Users().all_python_test_delete_null(user_id = interaction.author.id, python_test = python_test)
+        await self.generator_question_python(interaction = interaction, python_test = python_test)
 
+    async def test_python_pause_enter(self, interaction, python_test) -> None:
+        try: await interaction.message.delete()
+        except: pass
+        await self.generator_question_python(interaction = interaction, python_test = python_test)
+
+    async def python_test(self, interaction, python_test):
+        await interaction.message.delete()
+        ic(python_test)
+        match python_test:
+            case 'easy':
+                ru_python_test_1 = 'лёгкое'
+                ru_python_test_2 = 'лёгкий'
+            case 'medium':
+                ru_python_test_1 = 'среднее'
+                ru_python_test_2 = 'средний'
+            case 'hard':
+                ru_python_test_1 = 'сложное'
+                ru_python_test_2 = 'сложный'
+        if (await DS_Users().testing_an_Python_test(user_id = interaction.author.id, python_test = python_test)) != 0:
+            view_1 = disnake.ui.View()
+            view_1.add_item(disnake.ui.Button(label = f"Нет, я хочу начать {ru_python_test_2} тест сначала", custom_id = f"test_python_pause_not_enter_{python_test}"))
+            view_1.add_item(disnake.ui.Button(label = f"Да, хочу продолжить {ru_python_test_2} тест!", custom_id = f"test_python_pause_enter_{python_test}"))
+            view_1.add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
+            await interaction.response.send_message(f"Хотите продолжить {ru_python_test_1} тестирование по Python с сохранением попытки или начать с начало!\n{await TG_Users().progress_python_test(user_id = query.from_user.id, python_test = python_test)}", view = view_1)
+        else:
+            await DS_Users().edit_proba_premium_test_python(user_id = interaction.author.id)
+            await self.test_python_pause_not_enter(interaction = interaction, python_test = python_test)
 
     """
-    async def generator_question_python_ds(self, ctx):
+    async def generator_question_python_ds(self, interaction, python_test):
         count_question = ...  # Calculate or retrieve question count
         used_questions = ...  # Get list of used question IDs
 
