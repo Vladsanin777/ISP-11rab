@@ -7,28 +7,6 @@ from datab.ORM import DS_Users, PythonTest
 
 
 
-class podtverzhd(disnake.ui.View):
-    def __init__(self):
-        super().__init__()
-    @disnake.ui.button(label='Подтвердить отправку', style=disnake.ButtonStyle.green, emoji='✅')
-    async def question_1(self, button: disnake.ui.Button, interaction: disnake.CmdInteraction):
-        await interaction.response.send_message('Отправка подтверждена!', ephemeral=True)
-        self.stop()
-    @disnake.ui.button(label='Отменить отпрвку', style=disnake.ButtonStyle.red, emoji='❌')
-    async def question_2(self, button: disnake.ui.Button, interaction: disnake.CmdInteraction):
-        await interaction.response.send_message('Отправка отменена', ephemeral=True)
-        self.stop()
-    @disnake.ui.button(label='Отменить отпрвку', style=disnake.ButtonStyle.blurple, emoji='❌')
-    async def question_3(self, button: disnake.ui.Button, interaction: disnake.CmdInteraction):
-        await interaction.response.send_message('Отправка отменена', ephemeral=True)
-        self.stop()
-
-    @disnake.ui.button(label = "Закрыть", custom_id = "esc")
-    async def esc_discord(self, ctx):
-        print("Работает")
-        await ctx.message.delete()
-
-
 
 class Python_test(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -80,13 +58,20 @@ class Python_test(commands.Cog):
                 await self.test_python_pause_not_enter(interaction = interaction, python_test = d.split("_")[5])
             case 'test_python_pause_enter_easy' | 'test_python_pause_enter_medium' | 'test_python_pause_enter_hard':
                 await self.test_python_pause_enter(interaction = interaction, python_test = d.split("_")[4])
-            case 'enter_questions_easy_test_python' | 'enter_questions_medium_test_python' | 'enter_questions_hard_test_python':
+            case 'enter_questions_easy_test_python_1' | 'enter_questions_easy_test_python_2' | 'enter_questions_easy_test_python_3' | 'enter_questions_medium_test_python_1' | 'enter_questions_medium_test_python_2' | 'enter_questions_medium_test_python_3' | 'enter_questions_hard_test_python_1' | 'enter_questions_hard_test_python_2' | 'enter_questions_hard_test_python_3':
                 await self.enter_questions_test_python(interaction = interaction, python_test = d.split("_")[2])
+            case 'not_enter_questions_easy_test_python_1' | 'not_enter_questions_easy_test_python_2' | 'not_enter_questions_easy_test_python_3' | 'not_enter_questions_medium_test_python_1' | 'not_enter_questions_medium_test_python_2' | 'not_enter_questions_medium_test_python_3' | 'not_enter_questions_hard_test_python_1' | 'not_enter_questions_hard_test_python_2' | 'not_enter_questions_hard_test_python_3':
+                await self.not_enter_questions_test_python(interaction = interaction, python_test = d.split("_")[3])
+
+    async def not_enter_questions_test_python(self, *, interaction, python_test) -> None:
+        await interaction.message.delete()
+        await DS_Users().not_enter_questions_test_python(user_id = interaction.author.id, python_test = python_test)
+        await self.end_test_python(interaction = interaction, python_test = python_test)
 
     #Выдаёт пользователю результат прохождения лёгкого теста по python или задаёт следующий вопрос
-    async def end_test_python(*, interaction, python_test):
+    async def end_test_python(self, *, interaction, python_test):
         if (await DS_Users().progress_python_test_number(user_id = interaction.author.id, python_test = python_test)) < 10:
-            await generator_question_python(interaction=interaction, python_test = python_test)
+            await self.generator_question_python_ds(interaction=interaction, python_test = python_test)
         else: 
             match python_test:
                 case 'easy':
@@ -108,23 +93,23 @@ class Python_test(commands.Cog):
         await DS_Users().enter_questions_test_python(user_id = interaction.author.id, python_test = python_test)
         await self.end_test_python(interaction = interaction, python_test = python_test)
 
-    async def python_test_yes(interaction):
+    async def python_test_yes(self, interaction):
         await interaction.message.delete()
         view_1 = disnake.ui.View()
         view_1.add_item(disnake.ui.Button(label = "Лёгкий", custom_id = "easy_python_test")).add_item(disnake.ui.Button(label = "Средний", custom_id = "medium_python_test")).add_item(disnake.ui.Button(label = "Сложный", custom_id = "hard_python_test")).add_item(disnake.ui.Button(label = "Закрыть", custom_id = "esc"))
         await interaction.response.send_message(f"Если хотите пройти тест по python, то выбирите уровень сложности или закрыть если передумали:", view = view_1)
-        
+
     async def test_python_pause_not_enter(self, interaction, python_test):
         try: await interaction.message.delete()
         except: pass
         await DS_Users().edit_proba_premium_test_python(user_id = interaction.author.id)
         await DS_Users().all_python_test_delete_null(user_id = interaction.author.id, python_test = python_test)
-        await self.generator_question_python(interaction = interaction, python_test = python_test)
+        await self.generator_question_python_ds(interaction = interaction, python_test = python_test)
 
     async def test_python_pause_enter(self, interaction, python_test) -> None:
         try: await interaction.message.delete()
         except: pass
-        await self.generator_question_python(interaction = interaction, python_test = python_test)
+        await self.generator_question_python_ds(interaction = interaction, python_test = python_test)
 
     async def python_test(self, interaction, python_test):
         await interaction.message.delete()
@@ -162,14 +147,15 @@ class Python_test(commands.Cog):
 
         answer = answer_question.copy()[1:]
         random.shuffle(answer)
-
-        buttons = [
-            disnake.ui.Button(label=p, custom_id=f"not_enter_questions_{python_test}_test_python" if p is i else f"enter_questions_{python_test}_test_python")
-            for i, p in enumerate(answer)
-        ]
-        ic(buttons)
-        view = disnake.ui.View(children=buttons)
-        view.add_item(disnake.ui.Button(label="Close", custom_id="esc"))
+        view = disnake.ui.View()
+        o = 0
+        for i in answer:
+            o  += 1
+            p = i if i[0] != "~" else i[1:]
+            ans = f"not_enter_questions_{python_test}_test_python" if p is i else f"enter_questions_{python_test}_test_python"
+            view.add_item(disnake.ui.Button(label = p, custom_id = f"{ans}_{o}"))
+        ic(view)
+        view.add_item(disnake.ui.Button(label="Закрыть", custom_id="esc"))
 
         await DS_Users().list_answer_python_test_number(user_id = interaction.author.id, number = random_question, python_test = python_test)
 
