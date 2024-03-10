@@ -14,6 +14,7 @@ from openai import AsyncOpenAI
 
 from typing import Optional
 
+import youtube_dl
 
 import cogs.new
 

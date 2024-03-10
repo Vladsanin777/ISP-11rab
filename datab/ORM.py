@@ -306,17 +306,17 @@ class DS_Users():
   
 
   #Метод для поиска имени пользователя
-  async def ds_users_proba_name(self, *, id_ds):
+  async def ds_users_proba_name(self, *, user_id):
     with sqlite3.connect('datab/DS/ds_users.db') as db_ds_users:
       cursor = db_ds_users.cursor()
-      return cursor.execute("SELECT name FROM ds_users WHERE id = ?", (id_ds,)).fetchone()[0]
+      return cursor.execute("SELECT name FROM ds_users WHERE id = ?", (user_id,)).fetchone()[0]
 
 
   #Переименование пользователя
-  async def ds_users_edit_name(self, *, from_user, new_name):
+  async def ds_users_edit_name(self, *, user_id, new_name):
     with sqlite3.connect('datab/DS/ds_users.db') as db_ds_users:
       cursor = db_ds_users.cursor()
-      cursor.execute("UPDATE ds_users SET name = ? WHERE id = ?", (new_name, from_user.id))
+      cursor.execute("UPDATE ds_users SET name = ? WHERE id = ?", (new_name, user_id))
       db_ds_users.commit()
 
 
