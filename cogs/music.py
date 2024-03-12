@@ -50,22 +50,25 @@ class CMDUsers7 (commands.Cog):
     
     # Добавление трека в очередь
     if str(ctx.author.voice.channel.id) not in self.queue:
-      self.queue[str(ctx.author.voice.channel.id)] = [(title, url_audio)]
+      self.queue[str(ctx.author.voice.channel.id)] = list()
+      self.queue[str(ctx.author.voice.channel.id)].append([(title, url_audio)])
+      self.queue[str(ctx.author.voice.channel.id)].append(0)
       print("Первый")
     else:
-      self.queue[str(ctx.author.voice.channel.id)].append((title, url_audio))
+      self.queue[str(ctx.author.voice.channel.id)][0].append((title, url_audio))
     await ctx.send(f'Трек **{title}** добавлен в очередь.')
-    print(self.queue)
+    ic(self.queue)
     print(url_audio)
 
 
   # Функция для воспроизведения следующего трека
   async def play_next_track(self, ctx):
     voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
-    if str(ctx.author.voice.channel.id) in self.queue and self.queue[str(ctx.author.voice.channel.id)]:
-      next_title, next_url = self.queue[str(ctx.author.voice.channel.id)].pop(0)
+    if str(ctx.author.voice.channel.id) in self.queue and self.queue[str(ctx.author.voice.channel.id)][0]:
+      next_title, next_url = self.queue[str(ctx.author.voice.channel.id)][0][self.queue[str(ctx.author.voice.channel.id)][1]]
       next_source = await disnake.FFmpegOpusAudio.from_probe(next_url)
       voice_client.play(next_source)
+      self.queue[str(ctx.author.voice.channel.id)][1] += 1
       await ctx.send(f'Воспроизводится **{next_title}**.')
     else:
       await voice_client.disconnect()
@@ -75,35 +78,30 @@ class CMDUsers7 (commands.Cog):
   # Команда для воспроизведения очереди
   @commands.slash_command()
   async def play(self, ctx):
-
-
     ic(self.queue)
     ic(ctx.author.voice.channel.id)
     # Проверка очереди
     if str(ctx.author.voice.channel.id) not in self.queue:
       return await ctx.send('Очередь пуста.')
+    await ctx.author.voice.channel.connect()
+    await ctx.send('Бот подключился к голосовому каналу.')
     voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     """Воспроизводит очередь треков."""
-    if not disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild):
-      await ctx.author.voice.channel.connect()
-      await ctx.send('Бот подключился к голосовому каналу.')
-      while True:
-        while voice_client.is_playing():
-          await asyncio.sleep(3)
-        if len(self.queue and self.queue[str(ctx.author.voice.channel.id)]) != 0:
-          await self.play_next_track()
-        else:
-          await ctx.author.voice.channel.disconnect()
-          break
+    while True:
+      if len(self.queue[str(ctx.author.voice.channel.id)][0]) != 0:
+        await self.play_next_track(ctx = ctx)
+      """Надо решить проблему здесь"""
+      """Решение только одно запрашивать изначально время песни"""
+      while voice_client.is_playing():
+        await asyncio.sleep(3)
+      if len(self.queue[str(ctx.author.voice.channel.id)][0]) != 0:
+        await self.play_next_track(ctx = ctx)
+      else:
+        await ctx.author.voice.channel.disconnect()
+        break
 
     
     
-    # Воспроизведение первого трека
-    title, url = self.queue[str(ctx.author.voice.channel.id)].pop(0)
-    source = await disnake.FFmpegOpusAudio.from_probe(url)
-    disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild).play(source)
-    await ctx.send(f'Воспроизводится **{title}**.')
-
   # Команда для пропуска трека
   @commands.slash_command()
   async def skip(self, ctx):
