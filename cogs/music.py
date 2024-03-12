@@ -8,7 +8,7 @@ import logging
 
 from icecream import ic
 
-from youtube_dl import YoutubeDL
+import yt_dlp
 
 from dataclasses import dataclass
 
@@ -27,40 +27,50 @@ class CMDUsers7 (commands.Cog):
 
 
 
-  # Команда для добавления трека в очередь
   @commands.slash_command()
   async def add(self, ctx, url: str):
+    await ctx.response.defer()
     """Добавляет трек в очередь."""
     if not url.startswith('http'):
       return await ctx.send('Неверная ссылка.')
-    ydl_opts = {
-      'format': 'bestaudio/best',
-      'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'opus',
-        'preferredquality': '192',
-      }],
-      'verbose': True
-    }
     
     # Получение информации о треке
     try:
-      with YoutubeDL(ydl_opts) as ydl:
+      ydl_opts = {
+        'format': 'bestaudio',
+        'age_limit': 120,  # Указываем возрастной лимит (можно указать любой, включая 18+)
+      }
+      with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-        title = "Об этом треке нет информации" if info['title'] is None else info['title']
-        url_audio = info['formats'][0]['url']
-    except:
+        title = info['title']
+        url_audio = info['url']
+    except Exception as e:
       title = "Об этом треке нет информации"
+      print(f"Ошибка при получении информации о треке: {e}")
     
     # Добавление трека в очередь
     if str(ctx.author.voice.channel.id) not in self.queue:
       self.queue[str(ctx.author.voice.channel.id)] = [(title, url_audio)]
-      ic("Первый")
+      print("Первый")
     else:
       self.queue[str(ctx.author.voice.channel.id)].append((title, url_audio))
     await ctx.send(f'Трек **{title}** добавлен в очередь.')
-    ic(self.queue)
-    ic(url_audio)
+    print(self.queue)
+    print(url_audio)
+
+
+  # Функция для воспроизведения следующего трека
+  async def play_next_track(self, ctx):
+    voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    if str(ctx.author.voice.channel.id) in self.queue and self.queue[str(ctx.author.voice.channel.id)]:
+      next_title, next_url = self.queue[str(ctx.author.voice.channel.id)].pop(0)
+      next_source = await disnake.FFmpegOpusAudio.from_probe(next_url)
+      voice_client.play(next_source)
+      await ctx.send(f'Воспроизводится **{next_title}**.')
+    else:
+      await voice_client.disconnect()
+
+
 
   # Команда для воспроизведения очереди
   @commands.slash_command()
@@ -72,11 +82,19 @@ class CMDUsers7 (commands.Cog):
     # Проверка очереди
     if str(ctx.author.voice.channel.id) not in self.queue:
       return await ctx.send('Очередь пуста.')
-    
+    voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     """Воспроизводит очередь треков."""
     if not disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild):
       await ctx.author.voice.channel.connect()
       await ctx.send('Бот подключился к голосовому каналу.')
+      while True:
+        while voice_client.is_playing():
+          await asyncio.sleep(3)
+        if len(self.queue and self.queue[str(ctx.author.voice.channel.id)]) != 0:
+          await self.play_next_track()
+        else:
+          await ctx.author.voice.channel.disconnect()
+          break
 
     
     
