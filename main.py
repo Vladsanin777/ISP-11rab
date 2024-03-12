@@ -45,6 +45,8 @@ from cryptography.fernet import Fernet
 
 import TOKEN
 
+from cogs.music import CMDUsers7
+
 
 
 
@@ -532,8 +534,6 @@ async def on_ready():
 
     #Запускаем работу баз данных
     ORM()
-
-
     #Запускаем Телеграм бота
     await dp.start_polling(bot_t)
     
