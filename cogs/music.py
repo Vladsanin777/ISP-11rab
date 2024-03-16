@@ -8,12 +8,13 @@ import logging
 
 from icecream import ic
 
-import pafy
+import pytube
 
 from dataclasses import dataclass
 
+#https://github.com/Just-Some-Bots/MusicBot/tree/master/musicbot
 
-
+#https://www.youtube.com/watch?v=rdohBDFBlMo
 
 class CMDUsers7 (commands.Cog):
   def __init__(self, bot): 
@@ -38,12 +39,10 @@ class CMDUsers7 (commands.Cog):
 
 
     await ctx.response.defer()
-
-    with pafy.new(url) as video:
+    with pytube.Youtube(url) as video:
       title = video.title
-      best_audio = video.getbestaudio()
-      url_audio = best_audio.url
-      duration = video.duration
+      url_audio = video.streams.filter(only_audio=True).first().url
+      duration = video.length
     
     # Добавление трека в очередь
     if str(ctx.author.voice.channel.id) not in self.queue:
