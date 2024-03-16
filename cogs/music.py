@@ -8,7 +8,7 @@ import logging
 
 from icecream import ic
 
-import yt_dlp
+import pafy
 
 from dataclasses import dataclass
 
@@ -38,29 +38,21 @@ class CMDUsers7 (commands.Cog):
 
 
     await ctx.response.defer()
-    # Получение информации о треке
-    try:
-      ydl_opts = {
-        'format': 'bestaudio',
-        'age_limit': 120,  # Указываем возрастной лимит (можно указать любой, включая 18+)
-      }
-      with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        title = info['title']
-        url_audio = info['url']
-        duration = info.get('duration')
-    except Exception as e:
-      title = "Об этом треке нет информации"
-      print(f"Ошибка при получении информации о треке: {e}")
+
+    with pafy.new(url) as video:
+      title = video.title
+      best_audio = video.getbestaudio()
+      url_audio = best_audio.url
+      duration = video.duration
     
     # Добавление трека в очередь
     if str(ctx.author.voice.channel.id) not in self.queue:
-      self.queue[str(ctx.author.voice.channel.id)] = list()
-      self.queue[str(ctx.author.voice.channel.id)].append([(title, url_audio, duration)])
-      self.queue[str(ctx.author.voice.channel.id)].append(0)
+      self.queue[str(ctx.author.voice.channel.id)] = dict()
+      self.queue[str(ctx.author.voice.channel.id)]["treak"] = [[title, url_audio, duration]]
+      self.queue[str(ctx.author.voice.channel.id)]["nomber"] = 0
       print("Первый")
     else:
-      self.queue[str(ctx.author.voice.channel.id)][0].append((title, url_audio, duration))
+      self.queue[str(ctx.author.voice.channel.id)]["treak"][0].append([title, url_audio, duration])
     await ctx.send(f'Трек **{title}** длинной {duration} добавлен в очередь.')
     ic(self.queue)
     print(url_audio)
@@ -70,11 +62,15 @@ class CMDUsers7 (commands.Cog):
   # Функция для воспроизведения следующего трека
   async def play_next_track(self, ctx):
     voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
-    if str(ctx.author.voice.channel.id) in self.queue and self.queue[str(ctx.author.voice.channel.id)][0]:
-      next_title, next_url, duration = self.queue[str(ctx.author.voice.channel.id)][0][self.queue[str(ctx.author.voice.channel.id)][1]]
+    if str(ctx.author.voice.channel.id) in self.queue and self.queue[str(ctx.author.voice.channel.id)]["treak"]:
+      next_title, next_url, duration = self.queue[str(ctx.author.voice.channel.id)]["treak"][self.queue[str(ctx.author.voice.channel.id)]["nomber"]]
       next_source = await disnake.FFmpegOpusAudio.from_probe(next_url)
       voice_client.play(next_source)
-      self.queue[str(ctx.author.voice.channel.id)][1] += 1
+      try:
+        self.queue[str(ctx.author.voice.channel.id)]["nomber"] = self.queue[str(ctx.author.voice.channel.id)]["nomber"] + 1
+        self.queue[str(ctx.author.voice.channel.id)]["treak"][self.queue[str(ctx.author.voice.channel.id)]["nomber"]]
+      except:
+        self.queue[str(ctx.author.voice.channel.id)]["nomber"] = 0
       await ctx.send(f'Воспроизводится **{next_title}**.')
     else:
       await voice_client.disconnect()
@@ -93,18 +89,13 @@ class CMDUsers7 (commands.Cog):
     await ctx.send('Бот подключился к голосовому каналу.')
     voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     """Воспроизводит очередь треков."""
-    while True:
-      if len(self.queue[str(ctx.author.voice.channel.id)][0]) != 0:
-        await self.play_next_track(ctx = ctx)
-      """Надо решить проблему здесь"""
-      """Решение только одно запрашивать изначально время песни"""
+    while len(self.queue[str(ctx.author.voice.channel.id)]["treak"]) != 0:
+      await self.play_next_track(ctx = ctx)
 
-      await asyncio.sleep(self.queue[str(ctx.author.voice.channel.id)][0][2])
-      if len(self.queue[str(ctx.author.voice.channel.id)][0]) != 0:
-        await self.play_next_track(ctx = ctx)
-      else:
-        await ctx.author.voice.channel.disconnect()
-        break
+      await asyncio.sleep(self.queue[str(ctx.author.voice.channel.id)]["treak"][self.queue[str(ctx.author.voice.channel.id)]["nomber"]][2])
+
+    await ctx.author.voice.channel.disconnect()
+
 
     
     
