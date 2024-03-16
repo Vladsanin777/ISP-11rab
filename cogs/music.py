@@ -29,11 +29,15 @@ class CMDUsers7 (commands.Cog):
 
   @commands.slash_command()
   async def add(self, ctx, url: str):
-    await ctx.response.defer()
+    if ctx.author.voice is None:
+      return await ctx.send("Вы не находитесь в голосовом канале!")
+
     """Добавляет трек в очередь."""
     if not url.startswith('http'):
       return await ctx.send('Неверная ссылка.')
-    
+
+
+    await ctx.response.defer()
     # Получение информации о треке
     try:
       ydl_opts = {
@@ -44,6 +48,7 @@ class CMDUsers7 (commands.Cog):
         info = ydl.extract_info(url, download=False)
         title = info['title']
         url_audio = info['url']
+        duration = info.get('duration')
     except Exception as e:
       title = "Об этом треке нет информации"
       print(f"Ошибка при получении информации о треке: {e}")
@@ -51,21 +56,22 @@ class CMDUsers7 (commands.Cog):
     # Добавление трека в очередь
     if str(ctx.author.voice.channel.id) not in self.queue:
       self.queue[str(ctx.author.voice.channel.id)] = list()
-      self.queue[str(ctx.author.voice.channel.id)].append([(title, url_audio)])
+      self.queue[str(ctx.author.voice.channel.id)].append([(title, url_audio, duration)])
       self.queue[str(ctx.author.voice.channel.id)].append(0)
       print("Первый")
     else:
-      self.queue[str(ctx.author.voice.channel.id)][0].append((title, url_audio))
-    await ctx.send(f'Трек **{title}** добавлен в очередь.')
+      self.queue[str(ctx.author.voice.channel.id)][0].append((title, url_audio, duration))
+    await ctx.send(f'Трек **{title}** длинной {duration} добавлен в очередь.')
     ic(self.queue)
     print(url_audio)
+    print(duration)
 
 
   # Функция для воспроизведения следующего трека
   async def play_next_track(self, ctx):
     voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     if str(ctx.author.voice.channel.id) in self.queue and self.queue[str(ctx.author.voice.channel.id)][0]:
-      next_title, next_url = self.queue[str(ctx.author.voice.channel.id)][0][self.queue[str(ctx.author.voice.channel.id)][1]]
+      next_title, next_url, duration = self.queue[str(ctx.author.voice.channel.id)][0][self.queue[str(ctx.author.voice.channel.id)][1]]
       next_source = await disnake.FFmpegOpusAudio.from_probe(next_url)
       voice_client.play(next_source)
       self.queue[str(ctx.author.voice.channel.id)][1] += 1
@@ -92,8 +98,8 @@ class CMDUsers7 (commands.Cog):
         await self.play_next_track(ctx = ctx)
       """Надо решить проблему здесь"""
       """Решение только одно запрашивать изначально время песни"""
-      while voice_client.is_playing():
-        await asyncio.sleep(3)
+
+      await asyncio.sleep(self.queue[str(ctx.author.voice.channel.id)][0][2])
       if len(self.queue[str(ctx.author.voice.channel.id)][0]) != 0:
         await self.play_next_track(ctx = ctx)
       else:
