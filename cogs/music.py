@@ -10,6 +10,8 @@ from icecream import ic
 
 import pytube
 
+
+
 from dataclasses import dataclass
 
 #https://github.com/Just-Some-Bots/MusicBot/tree/master/musicbot
@@ -17,12 +19,12 @@ from dataclasses import dataclass
 #https://www.youtube.com/watch?v=rdohBDFBlMo
 
 class CMDUsers7 (commands.Cog):
-  def __init__(self, bot): 
+  def __init__(self, bot):
     self.bot = bot
 
 
-  @commands.Cog.listener() 
-  async def on_ready (self): 
+  @commands.Cog.listener()
+  async def on_ready (self):
     print(f"Бот {self.bot.user} использует ког {__name__}")
     self.queue = dict()
 
@@ -39,11 +41,11 @@ class CMDUsers7 (commands.Cog):
 
 
     await ctx.response.defer()
-    with pytube.Youtube(url) as video:
-      title = video.title
-      url_audio = video.streams.filter(only_audio=True).first().url
-      duration = video.length
-    
+    video = pytube.YouTube(url)
+    title = video.title
+    url_audio = video.streams.filter(only_audio=True).first().url
+    duration = video.length
+
     # Добавление трека в очередь
     if str(ctx.author.voice.channel.id) not in self.queue:
       self.queue[str(ctx.author.voice.channel.id)] = dict()
@@ -60,15 +62,19 @@ class CMDUsers7 (commands.Cog):
 
   # Функция для воспроизведения следующего трека
   async def play_next_track(self, ctx):
+    ic("Вызов трека")
     voice_client = disnake.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
     if str(ctx.author.voice.channel.id) in self.queue and self.queue[str(ctx.author.voice.channel.id)]["treak"]:
       next_title, next_url, duration = self.queue[str(ctx.author.voice.channel.id)]["treak"][self.queue[str(ctx.author.voice.channel.id)]["nomber"]]
+      ic(f"next_title {next_title}, next_url {next_url}, duration {duration}")
+      if voice_client.is_playing():
+        voice_client.stop()
+        await ctx.send("Трек остановлен")
       next_source = await disnake.FFmpegOpusAudio.from_probe(next_url)
       voice_client.play(next_source)
-      try:
+      if len(self.queue[str(ctx.author.voice.channel.id)]["treak"]) < self.queue[str(ctx.author.voice.channel.id)]["nomber"] + 1:
         self.queue[str(ctx.author.voice.channel.id)]["nomber"] = self.queue[str(ctx.author.voice.channel.id)]["nomber"] + 1
-        self.queue[str(ctx.author.voice.channel.id)]["treak"][self.queue[str(ctx.author.voice.channel.id)]["nomber"]]
-      except:
+      else:
         self.queue[str(ctx.author.voice.channel.id)]["nomber"] = 0
       await ctx.send(f'Воспроизводится **{next_title}**.')
     else:
