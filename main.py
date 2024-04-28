@@ -1,3 +1,4 @@
+#  pip install aiogram disnake openai youtube_dl icecream cryptography putube
 import os
 import asyncio
 from typing import Optional

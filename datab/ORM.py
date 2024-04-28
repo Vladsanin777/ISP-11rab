@@ -598,13 +598,86 @@ class PythonTest(PythonTestBase):
     
 
 
+class DS_Servers():
+  async def ds_servers_connect(self):
+    try:
+      with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+        cursor = db_ds_servers.cursor()
+        query = """CREATE TABLE IF NOT EXISTS ds_servers (guild_id INTEGER, guild_name TEXT, premium BOOLEAN, admin_channel_id INTEGER, dover_admin BOOLEAN, event_channel INTEGER)"""
+        cursor.execute(query)
+        print("Соединение с базой данных ds_servers.db успешно создано!")
+    except Exception as e:
+      print(f"1Ошибка при создании таблицы в базе данных ds_servers.db: {e}")
 
 
+  # Метод для проверки на новый сервер
+  async def if_new_guild(self, *, guild_id):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      cursor = db_ds_servers.cursor()
+      guild_id = cursor.execute(
+        f"SELECT guild_id FROM ds_servers WHERE guild_id = ?",
+        (guild_id,),
+      ).fetchone()
+      return True if guild_id is None else False
 
 
-class ORM(TG_Users, PythonTest, DS_Users):    
+  # Метод для внесения в базу данных нового сервера
+  async def new_guild(self, *, guild_id, guild_name, guild_event_channel):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      if await self.if_new_guild(guild_id = guild_id):
+        cursor = db_ds_servers.cursor()
+        cursor.execute("""INSERT INTO ds_servers (guild_id, guild_name, premium, admin_channel_id, dover_admin, event_channel) VALUES (?, ?, ?, ?, ?, ?)""", (guild_id, guild_name, False, 0, False, guild_event_channel,))
+        db_ds_servers.commit()
+        return True
+      return False
+
+  # Метод для получения канала ивентов
+  async def event_channel(self, *, guild_id):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      cursor = db_ds_servers.cursor()
+      return cursor.execute(
+        f"SELECT event_channel FROM ds_servers WHERE guild_id = ?",
+        (guild_id,),
+      ).fetchone()[0]
+
+  # Метод для изменения канала ивентов
+  async def edit_event_channel(self, *, guild_id, event_channel):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      cursor = db_ds_servers.cursor()
+      old_event_channel = cursor.execute(
+        f"SELECT event_channel FROM ds_servers WHERE guild_id = ?",
+        (guild_id,),
+      ).fetchone()[0]
+      cursor.execute(f"UPDATE ds_servers SET event_channel = ? WHERE guild_id = ?", (event_channel, guild_id,),)
+      db_ds_servers.commit()
+      return old_event_channel
+
+  # Метод для получения канала администратора
+  async def admin_channel(self, *, guild_id):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      cursor = db_ds_servers.cursor()
+      return cursor.execute(
+        f"SELECT admin_channel_id FROM ds_servers WHERE guild_id = ?",
+        (guild_id,),
+      ).fetchone()[0]
+
+  # Метод для изменения канала администрации
+  async def edit_admin_channel(self, *, guild_id, admin_channel):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      cursor = db_ds_servers.cursor()
+      old_admin_channel = cursor.execute(
+        f"SELECT admin_channel_id FROM ds_servers WHERE guild_id = ?",
+        (guild_id,),
+      ).fetchone()[0]
+      cursor.execute(f"UPDATE ds_servers SET admin_channel_id = ? WHERE guild_id = ?", (admin_channel, guild_id,),)
+      db_ds_servers.commit()
+      return old_admin_channel
+
+
+class ORM(TG_Users, PythonTest, DS_Users, DS_Servers):
   def __init__(self):
     print("Начало запуска баз данных! ")
+    asyncio.ensure_future(self.ds_servers_connect())
     asyncio.ensure_future(self.ds_users_connect())
     asyncio.ensure_future(self.tg_users_connect())
-    asyncio.ensure_future( self.questions_on_python_connect())
+    asyncio.ensure_future(self.questions_on_python_connect())
