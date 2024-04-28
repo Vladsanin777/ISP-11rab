@@ -64,7 +64,12 @@ class NewAdmin(commands.Cog):
                     custom_id="new_admin",
                     components=components,
                 ))
-        match custID
+            case _:
+                if ctx.author.guild_permissions.administrator:
+                    user_a = self.bot.get_user(custom_id[3:])
+                    match custID[:14]:
+                        case "new_admin_yes_":
+                        case "new_admin_not_":
 
     @commands.Cog.listener()
     async def on_modal_submit(self, modal: disnake.ui.Modal):
