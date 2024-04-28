@@ -25,35 +25,36 @@ class NewAdmin(commands.Cog):
 
     @commands.Cog.listener()
     async def on_button_click(self, inter: disnake.MessageInteraction):
-        match inter.component.custom_id:
+        custID = inter.component.custom_id
+        match custID:
             case "new_admin":
                 # Детали модального окна и его компонентов
                 components = [
                     disnake.ui.TextInput(
                         label="Имя",
                         placeholder="Введите ваше имя!",
-                        custom_id="Имя:",
+                        custom_id="Имя",
                         style=disnake.TextInputStyle.short,
                         max_length=50,
                     ),
                     disnake.ui.TextInput(
                         label="Фамилия",
                         placeholder="Введите вашу фамилию!",
-                        custom_id="Фамилия:",
+                        custom_id="Фамилия",
                         style=disnake.TextInputStyle.short,
                         max_length=50,
                     ),
                     disnake.ui.TextInput(
                         label="Возраст",
                         placeholder="Введите ваш возраст!",
-                        custom_id="Возраст:",
+                        custom_id="Возраст",
                         style=disnake.TextInputStyle.short,
                         max_length=50,
                     ),
                     disnake.ui.TextInput(
                         label="О себе",
                         placeholder="Напишите о себе!",
-                        custom_id="О себе:",
+                        custom_id="О себе",
                         style=disnake.TextInputStyle.paragraph,
                         max_length=4000,
                     )
@@ -63,34 +64,25 @@ class NewAdmin(commands.Cog):
                     custom_id="new_admin",
                     components=components,
                 ))
+        match custID
 
     @commands.Cog.listener()
     async def on_modal_submit(self, modal: disnake.ui.Modal):
         match modal.custom_id:
             case "new_admin":
-                embed = disnake.Embed(description = f"{modal.user} хочет получить админку на этом сервере ({modal.guild}) вот его заявка:")
-                embed.add_field(
-                    name = "Имя",
-                    value = modal.components.custom_id["Имя:"],
-                    inline = False,
-                )
-                embed.add_field(
-                    name = "Фамилия",
-                    value = modal.components.custom_id["Фамилия:"],
-                    inline = False,
-                )
-                embed.add_field(
-                    name = "Возраст",
-                    value = modal.components.custom_id["Возраст:"],
-                    inline = False,
-                )
-                embed.add_field(
-                    name = "О себе",
-                    value = modal.components.custom_id["О себе:"],
-                    inline = False,
-                )
-                await (await DS_Servers().admin_channel(guild_id = modal.guild.id)).send(embed = embed)
-                print(modal)
+                embed = disnake.Embed(description=f"@{modal.user} хочет получить админку на этом сервере ({modal.guild}) вот его заявка:", colour = 666666)
+                for component in modal.data.components:
+                    embed.add_field(
+                        name=component['components'][0]['custom_id'],
+                        value=component['components'][0]['value'],
+                        inline=False,
+                    )
+                view = disnake.ui.View()
+                view.add_item(disnake.ui.Button(label="Назначить", custom_id=f"new_admin_yes_{modal.user.id}", style=disnake.ButtonStyle.green))
+                view.add_item(disnake.ui.Button(label="Отклонить", custom_id=f"new_admin_not_{modal.user.id}", style=disnake.ButtonStyle.red))
+                await self.bot.get_channel(await DS_Servers().admin_channel(guild_id=modal.guild.id)).send(embed=embed, view = view)
+                await modal.response.send_message(f"Ваша заявка отправлена админам этого сервера ({modal.guild}) на рассмотрение", embed = embed, ephemeral=True)
+
 
 
 
