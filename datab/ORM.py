@@ -603,7 +603,7 @@ class DS_Servers():
     try:
       with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
         cursor = db_ds_servers.cursor()
-        query = """CREATE TABLE IF NOT EXISTS ds_servers (guild_id INTEGER, guild_name TEXT, premium BOOLEAN, admin_channel_id INTEGER, dover_admin BOOLEAN, event_channel INTEGER)"""
+        query = """CREATE TABLE IF NOT EXISTS ds_servers (guild_id INTEGER, guild_name TEXT, premium BOOLEAN, admin_channel_id INTEGER, dover_admin BOOLEAN, event_channel_id INTEGER, admin_role_id INTEGER)"""
         cursor.execute(query)
         print("Соединение с базой данных ds_servers.db успешно создано!")
     except Exception as e:
@@ -626,7 +626,7 @@ class DS_Servers():
     with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
       if await self.if_new_guild(guild_id = guild_id):
         cursor = db_ds_servers.cursor()
-        cursor.execute("""INSERT INTO ds_servers (guild_id, guild_name, premium, admin_channel_id, dover_admin, event_channel) VALUES (?, ?, ?, ?, ?, ?)""", (guild_id, guild_name, False, 0, False, guild_event_channel,))
+        cursor.execute("""INSERT INTO ds_servers (guild_id, guild_name, premium, admin_channel_id, dover_admin, event_channel_id) VALUES (?, ?, ?, ?, ?, ?)""", (guild_id, guild_name, False, 0, False, guild_event_channel,))
         db_ds_servers.commit()
         return True
       return False
@@ -636,7 +636,7 @@ class DS_Servers():
     with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
       cursor = db_ds_servers.cursor()
       return cursor.execute(
-        f"SELECT event_channel FROM ds_servers WHERE guild_id = ?",
+        f"SELECT event_channel_id FROM ds_servers WHERE guild_id = ?",
         (guild_id,),
       ).fetchone()[0]
 
@@ -645,10 +645,10 @@ class DS_Servers():
     with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
       cursor = db_ds_servers.cursor()
       old_event_channel = cursor.execute(
-        f"SELECT event_channel FROM ds_servers WHERE guild_id = ?",
+        f"SELECT event_channel_id FROM ds_servers WHERE guild_id = ?",
         (guild_id,),
       ).fetchone()[0]
-      cursor.execute(f"UPDATE ds_servers SET event_channel = ? WHERE guild_id = ?", (event_channel, guild_id,),)
+      cursor.execute(f"UPDATE ds_servers SET event_channel_id = ? WHERE guild_id = ?", (event_channel, guild_id,),)
       db_ds_servers.commit()
       return old_event_channel
 
@@ -672,6 +672,13 @@ class DS_Servers():
       cursor.execute(f"UPDATE ds_servers SET admin_channel_id = ? WHERE guild_id = ?", (admin_channel, guild_id,),)
       db_ds_servers.commit()
       return old_admin_channel
+
+  # Метод для изменения роли администратора
+  async def edit_admin_role(self, *, guild_id, admin_role_id):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      cursor = db_ds_servers.cursor()
+      cursor.execute(f"UPDATE ds_servers SET admin_role_id = ? WHERE guild_id = ?", (admin_role_id, guild_id,),)
+      db_ds_servers.commit()
 
 
 class ORM(TG_Users, PythonTest, DS_Users, DS_Servers):
