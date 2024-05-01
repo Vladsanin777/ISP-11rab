@@ -82,11 +82,8 @@ async def main_2():
 
 
 
-# Инициализируем бота Discord
-intents = disnake.Intents.default()
-intents.message_content = True  # Добавить эту строку
 
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix="!", intents=disnake.Intents.all())
 
 
 # Инициализируем бота Telegram
@@ -94,7 +91,9 @@ tg = asyncio.run(Code().decode_1(value = TOKEN.TG_token[0], key = TOKEN.TG_token
 bot_t = aiogram.Bot(token=tg)
 dp = aiogram.Dispatcher()
 
-
+@bot.slash_command()
+async def users(stx):
+    await stx.send( f"{"\n".join([member.name for member in stx.guild.members])}  ")
 
 @bot.slash_command()
 async def server(inter):

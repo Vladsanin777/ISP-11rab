@@ -44,7 +44,7 @@ class SettingsGuild(commands.Cog):
                 await ds_server.edit_admin_role(guild_id = ctx.guild.id, admin_role_id = top_admin_role.id)
                 view = disnake.ui.View()
                 for admin_role in admin_roles:
-                    view.add_item(disnake.ui.Button(label=admin_role.name, custom_id=f"admin_role_id_{admin_role.id}", style=disnake.ButtonStyle.red)
+                    view.add_item(disnake.ui.Button(label=admin_role.name, custom_id=f"admin_role_id_{admin_role.id}", style=disnake.ButtonStyle.red))
                 await admin_channel.send(embed = disnake.Embed(description = f"Выберите роль для администраторов по умолчанию она будет ({top_admin_role.name}) если вы не видите нужной роли то воспользуйтесь командой:\n/роль_админа\nВажное примечание роль администратора должна иметь права администратора!", colour = 666666), view = view)
             else:
                 guild = ctx.guild
@@ -89,12 +89,18 @@ class SettingsGuild(commands.Cog):
     async def admin_role_list(self, guild):
         return [role for role in guild.roles if role.permissions.administrator and not is_bot_role(role)]
 
-
-    @commands.slash_command(name = "роль_админа", description = "Установить роль для администраторов")
+    @commands.slash_command(name="роль_админа", description="Установить роль для администраторов")
     @admin_only()
-    async def new_admin_role(self, ctx, admin_role = commands.Param(choise = await self.admin_role_list(ctx.guild))):
-        await ds_server.edit_admin_role(guild_id = ctx.guild.id, admin_role_id = admin_role.id)
-        await ctx.send(embed=disnake.Embed(description=f"Теперь роль администратора будет {admin.name}, если хотите хотите изменить роль то создайте роль с правами администратора и воспользуйтесь командой\n/роль_админа"), ephemeral=True)
+    async def new_admin_role(self, ctx, admin_role: disnake.Role):
+        if admin_role.is_bot_managed():
+            ctx.send(embed = disnake.Embed(description = f"Эта роль ({admin_role.name}) является ролью бота!", colour = 555555), ephemeral = True)
+            return 0
+        if not admin_role.permissions.administrator:
+            ctx.send(embed = disnake.Embed(description = f"Эта роль ({admin_role.name}) не имеет права администрации!", colour = 555555), ephemeral = True)
+            return 0
+        await DS_Servers().edit_admin_role(guild_id = ctx.guild.id, admin_role_id = admin_role.id)
+        await ctx.send(embed=disnake.Embed(description=f"Теперь роль администратора будет {admin_role.name}, если хотите хотите изменить роль то создайте роль с правами администратора и воспользуйтесь командой\n/роль_админа"), ephemeral=True)
+        await ctx.send(embed=disnake.Embed(description=f"Администратор ({ctx.author.name} или {ctx.author.username}) сервера ({ctx.guild.name}), Теперь роль администратора будет ({admin_role.name}), если хотите хотите изменить роль то создайте роль с правами администратора и воспользуйтесь командой\n/роль_админа"), ephemeral=True)
 
 def setup(bot):
     bot.add_cog(SettingsGuild (bot))

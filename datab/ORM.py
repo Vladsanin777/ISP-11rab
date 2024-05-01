@@ -680,6 +680,14 @@ class DS_Servers():
       cursor.execute(f"UPDATE ds_servers SET admin_role_id = ? WHERE guild_id = ?", (admin_role_id, guild_id,),)
       db_ds_servers.commit()
 
+  async def admin_role(self, guild_id):
+    with sqlite3.connect('datab/DS/ds_servers.db') as db_ds_servers:
+      cursor = db_ds_servers.cursor()
+      return cursor.execute(
+        f"SELECT admin_role_id FROM ds_servers WHERE guild_id = ?",
+        (guild_id,),
+      ).fetchone()[0]
+
 
 class ORM(TG_Users, PythonTest, DS_Users, DS_Servers):
   def __init__(self):

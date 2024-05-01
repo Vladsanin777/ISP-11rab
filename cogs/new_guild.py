@@ -18,15 +18,15 @@ class NewGuild(commands.Cog):
     async def on_guild_join(self, guild):
         top_channel = guild.text_channels[0]  # получаем самый верхний текстовый канал
         if await DS_Servers().new_guild(guild_id=guild.id, guild_name=guild.name, guild_event_channel=top_channel.id):
-            greetings = 'Привет всем! Я первый раз на этом сервере вот команды для первоначальной настройки:\n   /channel_admin\n    /channel_event'
+            greetings = 'Привет всем! Я первый раз на этом сервере вот команды для первоначальной настройки:\n   /канал_администрации\n    /канал_ивентов'
         else:
             try:
                 event_channel = DS_Servers().event_channel(guild.id)
-                greetings = 'Привет всем! Я вернулся и помню предыдущие настройки, но на всякий случай вот команды для моей настройки:\n /channel_admin\n    /channel_event'
+                greetings = 'Привет всем! Я вернулся и помню предыдущие настройки, но на всякий случай вот команды для моей настройки:\n    /канал_администрации\n    /канал_ивентов'
                 await event_channel.send(embed=disnake.Embed(description=greetings, colour=555555))
             except:
-                await DS_Servers().edit_event_channel(guild_id=guild.id, new_event_channel=top_channel.id)
-                greetings = 'Привет всем! Я вернулся и помню предыдущие настройки, но на всякий случай вот команды для моей настройки:\n /channel_admin\n    /channel_event'
+                await DS_Servers().edit_event_channel(guild_id=guild.id, event_channel=top_channel.id)
+                greetings = 'Привет всем! Я вернулся и помню предыдущие настройки, но на всякий случай вот команды для моей настройки:\n    /канал_администрации\n    /канал_ивентов'
                 await top_channel.send(embed=disnake.Embed(description=greetings, colour=555555))
         return greetings
 

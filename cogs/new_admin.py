@@ -19,9 +19,9 @@ class NewAdmin(commands.Cog):
                 view.add_item(disnake.ui.Button(label="Подать заявку", custom_id="new_admin", style=disnake.ButtonStyle.green))
                 await ctx.send(embed=disnake.Embed(description='Привет, нажми кнопку чтобы стать админом!', colour=555555), view=view, ephemeral=True)
             else:
-                await ctx.send(embed=disnake.Embed(description='Привет, Мне очень жаль но я не смогу отправить заявку на выдачу вам прав администратора так как на этом сервере был удалён канал администрации следовательно я немогу отправить вашу заявку на рассмотрение админам и владельцу сервера если у вас есть связь с админами или с владельцем сервера обратитесь к ним путь установят канал для админов спомошью комманды\n/admin_channel', colour=111111), view=view, ephemeral=True)
+                await ctx.send(embed=disnake.Embed(description='Привет, Мне очень жаль но я не смогу отправить заявку на выдачу вам прав администратора так как на этом сервере был удалён канал администрации следовательно я немогу отправить вашу заявку на рассмотрение админам и владельцу сервера если у вас есть связь с админами или с владельцем сервера обратитесь к ним путь установят канал для админов спомошью комманды\n/канал_администрации', colour=111111),  ephemeral=True)
         else:
-            await ctx.send(embed=disnake.Embed(description='Привет, Мне очень жаль но я не смогу отправить заявку на выдачу вам прав администратора так как на этом сервере не назначен канал администрации следовательно я немогу отправить вашу заявку на рассмотрение админам и владельцу сервера если у вас есть связь с админами или с владельцем сервера обратитесь к ним путь установят канал для админов спомошью комманды\n/admin_channel', colour=111111), view=view, ephemeral=True)
+            await ctx.send(embed=disnake.Embed(description='Привет, Мне очень жаль но я не смогу отправить заявку на выдачу вам прав администратора так как на этом сервере не назначен канал администрации следовательно я немогу отправить вашу заявку на рассмотрение админам и владельцу сервера если у вас есть связь с админами или с владельцем сервера обратитесь к ним путь установят канал для админов спомошью комманды\n/канал_администрации', colour=111111), ephemeral=True)
 
     @commands.Cog.listener()
     async def on_button_click(self, inter: disnake.MessageInteraction):
@@ -65,17 +65,37 @@ class NewAdmin(commands.Cog):
                     components=components,
                 ))
             case _:
-                if ctx.author.guild_permissions.administrator:
-                    user_a = self.bot.get_user(custom_id[3:])
+                if inter.author.guild_permissions.administrator:
+                    #user_n = inter.guild.get_member(custID[14:])
+                    user_n = inter.guild.get_member(int(custID[14:]))
+                    role_admin = inter.guild.get_role(await DS_Servers().admin_role(guild_id=inter.guild.id))
                     match custID[:14]:
                         case "new_admin_yes_":
+                            try:
+                                await user_n.add_roles(role_admin)
+                                await inter.message.delete()
+                                await user_n.send(f"Вам одобренно в администрировании!\nНа сервере ({inter.guild.name})\nАдминистратором ({inter.author.mention})", embed=inter.message.embeds[0])
+                                await inter.send(embed=disnake.Embed(description=f"Вы одобрили выдачу роли администратора ({role_admin.name}) пользователю ({user_n.mention})", colour=555555), ephemeral=True)
+                                await inter.channel.send(embed=disnake.Embed(description=f"Администратор ({inter.author.mention}) одобрил выдачу роли администратора ({role_admin.name}) пользователю ({user_n.mention})"))
+                            except disnake.errors.Forbidden:
+                                await inter.send(embed=disnake.Embed(description=f"""{inter.user.mention} ```ansi
+[2;31m[2;31m[0;31m[0;31mВнимательно прочитай![0m[0;31m[0m[2;31m[0m[2;31m[0m
+``` \nЯ не могу выдать {user_n.mention} роль потому что она ({role_admin.name}) стоит выше в списке ролей чем моя\nЧто бы это исправить либо опустите роль ({role_admin.name}) ниже моей либо на оборот поднимите мою роль выше роли ({role_admin.name})""", colour=555555), ephemeral=True)
                         case "new_admin_not_":
+                            await inter.message.delete()
+                            await user_n.send(f"Вам отказано в администрировании!\nНа сервере ({inter.guild.name})\nАдминистратором ({inter.author.mention})", embed=inter.message.embeds[0])
+                            await inter.send(embed=disnake.Embed(description=f"Вы не одобрили выдачу роли администратора ({role_admin.name}) пользователю ({user_n.mention})", colour=555555), ephemeral=True)
+                            await inter.channel.send(embed=disnake.Embed(description=f"Администратор ({inter.author.mention}) не одобрил выдачу роли администратора ({role_admin.name}) пользователю ({user_n.mention})"))
+                else:
+                    await inter.send(embed=disnake.Embed(description="У вас нет прав для того чтобы принимать решения о принятии администратора на пост!", colour=888888), ephemeral=True)
+
+
 
     @commands.Cog.listener()
     async def on_modal_submit(self, modal: disnake.ui.Modal):
         match modal.custom_id:
             case "new_admin":
-                embed = disnake.Embed(description=f"@{modal.user} хочет получить админку на этом сервере ({modal.guild}) вот его заявка:", colour = 666666)
+                embed = disnake.Embed(description=f"{modal.user.mention} хочет получить админку на этом сервере ({modal.guild}) вот его заявка:", colour = 666666)
                 for component in modal.data.components:
                     embed.add_field(
                         name=component['components'][0]['custom_id'],
@@ -89,7 +109,7 @@ class NewAdmin(commands.Cog):
                 await modal.response.send_message(f"Ваша заявка отправлена админам этого сервера ({modal.guild}) на рассмотрение", embed = embed, ephemeral=True)
 
 
-
+    #@commands.Cog.listene
 
 
 def setup(bot):
