@@ -22,10 +22,11 @@ class InfoUser(commands.Cog):
     async def get_user_avatar(self, ctx, user: disnake.User = commands.Param(default=None, name="участник"), ui: str = commands.Param(default="Только я", name="видимость", choices=["Только я", "Все участники чата"])):
         if user is None:
             user = ctx.author
-        try:
-            image_url = user.avatar.url
-        except AttributeError:
+        if user.avatar is None:
             image_url = user.default_avatar.url
+        else:
+            image_url = user.avatar.url
+
         with Image.open(BytesIO(requests.get(image_url).content)) as f:
             mean_color = np.mean(np.array(f), axis=(0,1))
             if isinstance(mean_color, np.ndarray) and len(mean_color) >= 3:
