@@ -1,4 +1,4 @@
-#  pip install aiogram disnake openai youtube_dl icecream cryptography putube Pillow numpy
+#  pip install aiogram disnake openai youtube_dl icecream cryptography putube Pillow numpy pytz numexpr babel
 
 import os
 import asyncio
