@@ -1,4 +1,8 @@
-#  pip install aiogram disnake openai youtube_dl icecream cryptography putube Pillow numpy pytz numexpr babel
+#  python -m venv myenv
+#  source myenv/bin/activate
+
+#  pip install aiogram disnake openai youtube_dl icecream cryptography Pillow numpy pytz numexpr babel requests
+
 
 import os
 import asyncio
