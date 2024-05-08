@@ -29,14 +29,6 @@ class InfoUser(commands.Cog):
         else: user_avater_url = user.default_avatar.url
         await ctx.send(embed=disnake.Embed(description=f'Аватарка пользователя {user.mention}', colour = Colour.from_rgb(*await colour_f(user_avater_url))).set_image(url=user_avater_url), ephemeral=True if ui == "Только я" else False, view=disnake.ui.View().add_item(disnake.ui.Button(label="Прямая ссылка на аватар", emoji="👍", url=user_avater_url)))
 
-    @commands.slash_command(name='банер', description='Отправляет банер участника')
-    async def get_user_banner(self, ctx, user: disnake.User = commands.Param(default=None, name="участник"), ui: str = commands.Param(default="Только я", name="видимость", choices=["Только я", "Все участники чата"])):
-        if user is None:
-            user = ctx.author
-
-        user_banner_url = user.banner.url
-
-        await ctx.send(embed=disnake.Embed(description=f'Банер пользователя {user.mention}', colour = Colour.from_rgb(*await colour_f(user_avater_url))).set_image(url=user_banner_url), ephemeral=True if ui == "Только я" else False, view=disnake.ui.View().add_item(disnake.ui.Button(label="Прямая ссылка на аватар", emoji="👍", url=user_banner_url)))
 
 def setup(bot):
     bot.add_cog(InfoUser (bot))
